@@ -1,0 +1,65 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C / C++ Build artifacts
+build/
+**/build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+*.dSYM/
+
+# Compiled Binaries
+nexus_core
+nexus_telemetry_test
+nexus_graph_test
+
+# Test outputs & temporary telemetry datasets
+test_output/
+**/test_output/
+*.jsonl
+*.log
+
+# Python Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+dist/
+eggs/
+
+# IDE & Operating System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Credentials, secrets, and private keys
+.env
+.env.*
+*.pem
+*.key
+*.cert
+*.crt
+id_rsa
+id_ed25519
