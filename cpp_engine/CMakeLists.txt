@@ -84,6 +84,8 @@ if(Torch_FOUND)
     src/telemetry_collector.cpp
     src/graph_engine.cpp
     src/rgcn.cpp
+    src/nexus_model.cpp
+    src/attack_path.cpp
   )
 
   target_include_directories(nexus_core PRIVATE
@@ -194,6 +196,38 @@ if(Torch_FOUND)
 endif()
 
 # -----------------------------------------------------------------------------
+# Target: nexus_model_test (System 03 & 04 Model & Attack Path Suite)
+# -----------------------------------------------------------------------------
+if(Torch_FOUND)
+  add_executable(nexus_model_test
+    src/test_nexus_model.cpp
+    src/nexus_model.cpp
+    src/attack_path.cpp
+    src/rgcn.cpp
+    src/graph_engine.cpp
+    src/telemetry_collector.cpp
+  )
+
+  target_include_directories(nexus_model_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${TORCH_INCLUDE_DIRS}
+  )
+
+  target_link_libraries(nexus_model_test PRIVATE
+    ${TORCH_LIBRARIES}
+    nlohmann_json::nlohmann_json
+  )
+
+  set_property(TARGET nexus_model_test PROPERTY CXX_STANDARD 17)
+  set_property(TARGET nexus_model_test PROPERTY CXX_STANDARD_REQUIRED ON)
+  set_property(TARGET nexus_model_test PROPERTY CXX_EXTENSIONS OFF)
+
+  if(DEFINED TORCH_CXX_FLAGS)
+    target_compile_options(nexus_model_test PRIVATE ${TORCH_CXX_FLAGS})
+  endif()
+endif()
+
+# -----------------------------------------------------------------------------
 # CTest Enablement
 # -----------------------------------------------------------------------------
 enable_testing()
@@ -201,4 +235,5 @@ add_test(NAME nexus_telemetry_test COMMAND nexus_telemetry_test)
 add_test(NAME nexus_graph_test COMMAND nexus_graph_test)
 if(Torch_FOUND)
   add_test(NAME nexus_rgcn_test COMMAND nexus_rgcn_test)
+  add_test(NAME nexus_model_test COMMAND nexus_model_test)
 endif()
