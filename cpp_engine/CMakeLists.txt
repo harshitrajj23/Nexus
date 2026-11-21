@@ -42,9 +42,9 @@ else()
     "[NEXUS BUILD NOTICE] LibTorch / PyTorch C++ library not found!\n"
     "================================================================================\n"
     "The core engine target 'nexus_core' requires LibTorch to build.\n"
-    "Test targets 'nexus_telemetry_test' and 'nexus_graph_test' will build without LibTorch.\n"
+    "Target 'nexus_telemetry_test' will build without LibTorch.\n"
     "\n"
-    "To build 'nexus_core' and enable LibTorch tensor tensors:\n"
+    "To build 'nexus_core' and enable LibTorch tensor modules:\n"
     "  Option 1 (via pip / Python):\n"
     "    pip install torch\n"
     "    cmake -B build -DCMAKE_PREFIX_PATH=$(python3 -c 'import torch; print(torch.utils.cmake_prefix_path)')\n"
@@ -83,6 +83,7 @@ if(Torch_FOUND)
     src/main.cpp
     src/telemetry_collector.cpp
     src/graph_engine.cpp
+    src/rgcn.cpp
   )
 
   target_include_directories(nexus_core PRIVATE
@@ -163,8 +164,41 @@ set_property(TARGET nexus_graph_test PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET nexus_graph_test PROPERTY CXX_EXTENSIONS OFF)
 
 # -----------------------------------------------------------------------------
+# Target: nexus_rgcn_test (System 03 R-GCN Test Suite)
+# -----------------------------------------------------------------------------
+if(Torch_FOUND)
+  add_executable(nexus_rgcn_test
+    src/test_rgcn.cpp
+    src/rgcn.cpp
+    src/graph_engine.cpp
+    src/telemetry_collector.cpp
+  )
+
+  target_include_directories(nexus_rgcn_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${TORCH_INCLUDE_DIRS}
+  )
+
+  target_link_libraries(nexus_rgcn_test PRIVATE
+    ${TORCH_LIBRARIES}
+    nlohmann_json::nlohmann_json
+  )
+
+  set_property(TARGET nexus_rgcn_test PROPERTY CXX_STANDARD 17)
+  set_property(TARGET nexus_rgcn_test PROPERTY CXX_STANDARD_REQUIRED ON)
+  set_property(TARGET nexus_rgcn_test PROPERTY CXX_EXTENSIONS OFF)
+
+  if(DEFINED TORCH_CXX_FLAGS)
+    target_compile_options(nexus_rgcn_test PRIVATE ${TORCH_CXX_FLAGS})
+  endif()
+endif()
+
+# -----------------------------------------------------------------------------
 # CTest Enablement
 # -----------------------------------------------------------------------------
 enable_testing()
 add_test(NAME nexus_telemetry_test COMMAND nexus_telemetry_test)
 add_test(NAME nexus_graph_test COMMAND nexus_graph_test)
+if(Torch_FOUND)
+  add_test(NAME nexus_rgcn_test COMMAND nexus_rgcn_test)
+endif()
