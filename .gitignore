@@ -28,8 +28,8 @@ nexus_graph_test
 # Test outputs & temporary telemetry datasets
 test_output/
 **/test_output/
-*.jsonl
 *.log
+!data/*.jsonl
 
 # Python Virtual Environments
 .venv/

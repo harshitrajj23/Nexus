@@ -1,0 +1,52 @@
+{
+  "dataset_name": "NEXUS Agent Security Benchmark (Synthetic)",
+  "version": "1.0.0",
+  "scenarios_summary": {
+    "train": {
+      "Normal": 73,
+      "Suspicious": 37,
+      "HighRisk": 28,
+      "Critical": 16,
+      "total_events": 631,
+      "total_scenarios": 154
+    },
+    "val": {
+      "Normal": 14,
+      "Suspicious": 7,
+      "HighRisk": 8,
+      "Critical": 4,
+      "total_events": 137,
+      "total_scenarios": 33
+    },
+    "test": {
+      "Normal": 13,
+      "Suspicious": 6,
+      "HighRisk": 4,
+      "Critical": 10,
+      "total_events": 140,
+      "total_scenarios": 33
+    },
+    "test_unseen": {
+      "Normal": 0,
+      "Suspicious": 0,
+      "HighRisk": 0,
+      "Critical": 40,
+      "total_events": 220,
+      "total_scenarios": 40
+    }
+  },
+  "withheld_attack_templates": [
+    {
+      "id": "unseen_indirect_prompt_injection_cloud_pivot",
+      "description": "Untrusted prompt injection in issue comment pivoting to AWS EC2 metadata service (169.254.169.254) for IAM role exfiltration",
+      "risk_class": "Critical",
+      "executions_count": 20
+    },
+    {
+      "id": "unseen_supply_chain_poisoning_credential_dump",
+      "description": "Package preinstall build script injection extracting CI/CD GitHub and NPM tokens to external adversary webhook",
+      "risk_class": "Critical",
+      "executions_count": 20
+    }
+  ]
+}
