@@ -71,6 +71,112 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Executive Header */}
+      <div className="bg-[#111827] border border-gray-800 rounded-xl p-5 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-gray-800">
+          <div>
+            <div className="flex items-center space-x-2">
+              <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-blue-500/10 text-cyan-400 border border-cyan-500/30 font-bold">
+                AgntID Agent Security Challenge
+              </span>
+              <span className="text-[10px] font-mono text-gray-500">Live Evaluation</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1.5">
+              NEXUS — Temporal Security Intelligence for AI Agents
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-400 mt-1">
+              Detects multi-step attack trajectories that isolated tool-call monitoring misses.
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={onNavigateToLab}
+              className="px-3.5 py-1.5 rounded-lg bg-purple-600/30 hover:bg-purple-600 text-purple-300 hover:text-white text-xs font-mono border border-purple-500/40 transition-colors flex items-center space-x-1.5"
+            >
+              <span>Experiment Lab</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* 5-Question Orientation Viewport */}
+        <div className="mt-3.5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 text-[11px] font-mono">
+          <div className="bg-gray-900/70 p-2.5 rounded-lg border border-gray-800">
+            <span className="text-cyan-400 block font-bold uppercase text-[10px]">1. What is NEXUS?</span>
+            <span className="text-gray-300 mt-0.5 block leading-tight">Dynamic temporal graph engine & evidence scoring for agent tool calls.</span>
+          </div>
+          <div className="bg-gray-900/70 p-2.5 rounded-lg border border-gray-800">
+            <span className="text-amber-400 block font-bold uppercase text-[10px]">2. What attack is happening?</span>
+            <span className="text-gray-300 mt-0.5 block leading-tight">Credential read & role escalation chaining to external egress.</span>
+          </div>
+          <div className="bg-gray-900/70 p-2.5 rounded-lg border border-gray-800">
+            <span className="text-rose-400 block font-bold uppercase text-[10px]">3. Why is it dangerous?</span>
+            <span className="text-gray-300 mt-0.5 block leading-tight">Individual calls look plausible, but together construct an unauthorized exploit path.</span>
+          </div>
+          <div className="bg-gray-900/70 p-2.5 rounded-lg border border-gray-800">
+            <span className="text-emerald-400 block font-bold uppercase text-[10px]">4. What should org do?</span>
+            <span className="text-gray-300 mt-0.5 block leading-tight">Pause workflow, rotate credentials, and require human approval.</span>
+          </div>
+          <div className="bg-gray-900/70 p-2.5 rounded-lg border border-gray-800">
+            <span className="text-purple-400 block font-bold uppercase text-[10px]">5. Was it blocked?</span>
+            <span className="text-amber-300/90 mt-0.5 block leading-tight font-semibold">Advisory only — no live blocking gateway attached.</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Side-by-Side Value Comparison: Traditional Isolated Monitoring vs NEXUS */}
+      <div className="bg-[#111827] border border-gray-800 rounded-xl p-4 shadow-sm">
+        <div className="text-[11px] font-mono uppercase tracking-wider text-gray-400 font-bold mb-2.5 flex items-center space-x-2">
+          <span>Why NEXUS? — Architecture Comparison</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono">
+          {/* Traditional */}
+          <div className="p-3.5 rounded-lg bg-gray-900/80 border border-gray-800">
+            <div className="flex items-center space-x-2 text-rose-400 font-bold pb-2 border-b border-gray-800">
+              <span className="w-2 h-2 rounded-full bg-rose-500" />
+              <span>Traditional Isolated Monitoring</span>
+            </div>
+            <ul className="mt-2.5 space-y-1.5 text-gray-300 text-[11px]">
+              <li className="flex items-start space-x-1.5">
+                <span className="text-gray-500">&bull;</span>
+                <span><strong>Sees:</strong> Single &ldquo;HTTP POST&rdquo; request in isolation.</span>
+              </li>
+              <li className="flex items-start space-x-1.5">
+                <span className="text-gray-500">&bull;</span>
+                <span><strong>Misses:</strong> Prior secret file read and privilege escalation events.</span>
+              </li>
+              <li className="flex items-start space-x-1.5">
+                <span className="text-gray-500">&bull;</span>
+                <span><strong>Response:</strong> May not alert (blind to temporal multi-step context).</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* NEXUS */}
+          <div className="p-3.5 rounded-lg bg-blue-950/20 border border-blue-500/30">
+            <div className="flex items-center space-x-2 text-cyan-400 font-bold pb-2 border-b border-gray-800">
+              <span className="w-2 h-2 rounded-full bg-cyan-400" />
+              <span>NEXUS Temporal Graph Evidence</span>
+            </div>
+            <ul className="mt-2.5 space-y-1.5 text-gray-300 text-[11px]">
+              <li className="flex items-start space-x-1.5">
+                <span className="text-cyan-400">&bull;</span>
+                <span><strong>Sees:</strong> Secret read &rarr; elevated role &rarr; external egress.</span>
+              </li>
+              <li className="flex items-start space-x-1.5">
+                <span className="text-cyan-400">&bull;</span>
+                <span><strong>Reconstructs:</strong> Causal multi-step trajectory across graph entities.</span>
+              </li>
+              <li className="flex items-start space-x-1.5">
+                <span className="text-cyan-400">&bull;</span>
+                <span><strong>Response:</strong> Critical recommendation with transparent evidence score.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
       {/* 1. Proactive Hackathon Active Security Decision Panel */}
       <ActiveSecurityDecisionPanel
         assessment={activeAssessment}

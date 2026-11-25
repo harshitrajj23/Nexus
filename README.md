@@ -6,7 +6,7 @@
 
 ## System Architecture
 
-NEXUS comprises six production-grade subsystems engineered in C++17, LibTorch, Python FastAPI, and React + TypeScript:
+NEXUS comprises six end-to-end subsystems engineered in C++17, LibTorch, Python FastAPI, and React + TypeScript:
 
 ```
                                   +------------------------------------+
@@ -282,28 +282,75 @@ npm run dev
 
 ---
 
+## Judge Preflight Check & Demo Checklist
+
+### 1. Judge Preflight Check (Single Command)
+Run the automated environment and dependency preflight check:
+```bash
+./scripts/judge_preflight.sh
+# Or alternatively: python3 agent_orchestrator/judge_preflight.py
+```
+This inspects Python (>= 3.10), PyTorch/LibTorch, C++ engine binary, model weights (`nexus_best.pt`), Node.js, and dashboard build readiness with zero external network calls.
+
+### 2. 90-Second Demo Execution (Single Command)
+Run the complete, safe competition demo:
+```bash
+./scripts/judge_demo.sh
+# Or alternatively: python3 agent_orchestrator/judge_demo.py
+```
+This safely runs Experiments A, B, and C in local sandboxes, prints chronological risk escalation, and generates a timestamped Judge Evidence Bundle at `data/demo_runs/JUDGE_EVIDENCE.md`.
+
+### 3. Interactive Judge Demo Checklist (Browser Experience)
+1. **Preflight**: Verify `./scripts/judge_preflight.sh` passes.
+2. **Start Backend**: `uvicorn agent_orchestrator.api:app --host 0.0.0.0 --port 8000`
+3. **Start Dashboard**: `cd dashboard && npm run dev` &rarr; Open `http://localhost:5173`
+4. **First Tab to Inspect (Overview)**: Observe the **Active Security Decision Panel** and **Why NEXUS?** comparison.
+5. **Scenario to Run**: Click **Experiment Lab** &rarr; Run **Experiment B (Multi-Step Attack Vector)**.
+6. **Expected Outcome**: Watch risk escalate to **Critical (95–100/100)** with recommendation: *"Recommend workflow pause and investigation"*.
+7. **What to Inspect Across Tabs**:
+   - **Live Graph**: Reconstructed causal attack path, timeline scrubber, and semantic badges (`[SENSITIVE]`, `[ELEVATED]`, `[TARGET EGRESS]`).
+   - **Threat Intel**: Chronological hop table with attribution scores ($a_e$) and structural multipliers (2.5x, 2.0x, 3.0x).
+   - **Model Intel**: Confusion matrix and ablation study proving temporal GRU recurrence reduced False Negatives by 80%.
+
+---
+
 ## PRD Integrity & Scientific Methodology Disclosures
 
 In accordance with strict competition evaluation and scientific integrity principles, NEXUS maintains full transparency across all reported metrics, system statuses, and experimental findings:
 
 1. **Four-Layer Decision Framework (Model != Evidence != Enforcement)**:
    NEXUS strictly decouples the four layers of autonomous threat assessment:
-   - **Layer 1: Neural Model Prediction**: Raw 4-class softmax probability distribution emitted by the C++17 LibTorch R-GCN + GRU model (`Normal`, `Suspicious`, `HighRisk`, `Critical`).
+   - **Layer 1: Neural Model Signal**: Raw 4-class softmax probability distribution emitted by the C++17 LibTorch R-GCN + GRU model (`Normal`, `Suspicious`, `HighRisk`, `Critical`).
    - **Layer 2: Deterministic Evidence Score (0–100)**: Transparent points-based score grounded in verified graph topology (`+25` sensitive secret read, `+25` admin privilege escalation, `+35` external network egress, `+10` complete causal chain, `+10` neural anomaly confirmation).
    - **Layer 3: Policy Recommendation**: Objective operational guidance mapped from evidence thresholds:
      - `0–24` Normal: *"Continue monitoring"*
      - `25–49` Suspicious: *"Alert analyst"*
      - `50–74` HighRisk: *"Require human approval before next sensitive action"*
      - `75–100` Critical: *"Recommend workflow pause and investigation"*
-   - **Layer 4: Actual Enforcement Status**: Reported honestly as `"NOT_ENFORCED (Simulated / Independent)"`. Policy recommendations inform human security teams; no simulated system claims inline interception without an active enforcement gateway.
+   - **Layer 4: Actual Enforcement Status**: Reported honestly as `"Advisory only — no live blocking gateway attached"`. Policy recommendations inform human security teams; no simulated system claims inline interception without an active enforcement gateway.
 
 2. **Honest Diagnostic on 4-Class Neural Model Performance**:
    - The temporal R-GCN + GRU architecture successfully resolved the catastrophic **100.0% False Negative Rate** of static graph models (reducing FNR to **20.0%**).
    - However, on the held-out test split, predictions clustered in `Normal` and `Suspicious`, with zero predictions in `HighRisk` and `Critical`. This reflects class-weight sensitivity and sequence-window granularity on small discrete splits.
-   - **Why this matters for judges**: Rather than fabricating artificial 99% accuracy numbers or concealing model undertraining, NEXUS pairs the graph neural network with deterministic structural signal attribution. This hybrid paradigm guarantees zero-hallucination explainability and bulletproof security decision-making.
+   - **Why this matters for judges**: Rather than fabricating artificial 99% accuracy numbers or concealing model undertraining, NEXUS pairs the graph neural network with deterministic structural signal attribution. This hybrid paradigm provides transparent explainability and defensible security decision-making.
 
 3. **Synthetic Telemetry Transparency**:
    Benchmark training and validation splits were generated synthetically (`agent_orchestrator/generate_dataset.py`) to safely model hazardous agent exploits (credential theft, cloud metadata queries). All benchmark records are explicitly flagged with `is_synthetic: true`. Live executions inside `agent_runner.py` are explicitly flagged with `is_synthetic: false`.
 
 4. **Honest AgntID Evaluation**:
    System checks confirm that no official AgntID SDK or daemon is currently installed in the host environment. Decisions are recorded independently as `NOT_EVALUATED` (`enforced: false`). **No fake enforcement claims or fabricated blocks are reported.**
+
+---
+
+## Known Limitations and Next Steps
+
+1. **Synthetic Benchmark Limitation**:
+   Current evaluation benchmarks rely on scenario-generated telemetry (`agent_orchestrator/generate_dataset.py`). While realistic and diverse, synthetic execution cannot fully replicate the nuances of real production enterprise agents.
+2. **Exact Severity Calibration on Discrete Splits**:
+   While the R-GCN + GRU model effectively detects anomalies (reducing FNR to 20%), fine-grained 4-class severity calibration (`Suspicious` vs `HighRisk` vs `Critical`) requires larger training corpora, focal loss tuning, and multi-task learning.
+3. **Real-World Agent Telemetry Validation**:
+   Future work will integrate live OpenTelemetry hooks into popular autonomous frameworks (LangChain, AutoGen, CrewAI, and Model Context Protocol servers).
+4. **Official AgntID Inline Enforcement Adapter**:
+   When the official AgntID enforcement daemon or webhook API is available, NEXUS policy recommendations will feed directly into inline interception gateways.
+5. **Per-Organization Policy Threshold Calibration**:
+   Evidence score thresholds (25, 50, 75) are set conservatively for demonstration and should be calibrated per organization based on risk tolerance and operational workflows.

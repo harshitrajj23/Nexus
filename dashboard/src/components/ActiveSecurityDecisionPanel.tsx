@@ -32,7 +32,7 @@ export const ActiveSecurityDecisionPanel: React.FC<ActiveSecurityDecisionPanelPr
   const policyRisk: RiskLevel = assessment?.policy_risk || 'Normal';
   const evidenceScore: number = assessment?.evidence_score ?? 0;
   const recommendedAction: string = assessment?.recommended_action || 'Continue monitoring';
-  const actualEnforcement: string = assessment?.actual_enforcement_status || 'NOT_ENFORCED (No active blocking engine attached; policy is advisory)';
+  const actualEnforcement: string = 'Advisory only — no live blocking gateway attached';
   const modelPred: string = assessment?.model_prediction || 'Normal';
   const modelConf: number = assessment?.model_confidence ?? 0.95;
 
@@ -187,32 +187,34 @@ export const ActiveSecurityDecisionPanel: React.FC<ActiveSecurityDecisionPanelPr
           )}
         </div>
 
-        {/* Model vs Evidence Comparison */}
+        {/* Four-Layer Decision Framework */}
         <div className="lg:col-span-1 bg-[#111827]/95 p-3.5 rounded-lg border border-gray-800 flex flex-col justify-between space-y-2">
           <div>
-            <span className="text-gray-400 text-[11px] font-bold block mb-1">
-              NEURAL MODEL VS EVIDENCE
+            <span className="text-gray-400 text-[11px] font-bold block mb-1 uppercase tracking-wider">
+              Four-Layer Decision Framework
             </span>
-            <div className="space-y-1 text-[11px]">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Neural Model Output:</span>
+            <div className="space-y-1.5 text-[11px]">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">1. Neural Model Signal:</span>
                 <span className="text-purple-300 font-bold">{modelPred} ({(modelConf * 100).toFixed(1)}%)</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Deterministic Evidence:</span>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">2. Evidence Score:</span>
                 <span className="text-cyan-300 font-bold">{evidenceScore}/100</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Final Policy Decision:</span>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">3. Policy Recommendation:</span>
                 <span className="text-amber-300 font-bold">{policyRisk}</span>
               </div>
             </div>
           </div>
 
           {/* Honest Enforcement Notice */}
-          <div className="pt-2 border-t border-gray-800 text-[10px] text-gray-400">
-            <span className="text-gray-500 block">Actual Enforcement Status:</span>
-            <span className="text-gray-300 font-semibold">{actualEnforcement}</span>
+          <div className="pt-2 border-t border-gray-800 text-[10px]">
+            <span className="text-gray-400 block font-semibold mb-0.5">4. Enforcement Status:</span>
+            <span className="text-amber-400/90 font-mono font-medium block">
+              {actualEnforcement}
+            </span>
           </div>
         </div>
       </div>

@@ -14,6 +14,7 @@ class HybridRiskEngine:
     Evaluates agent telemetry and graph intelligence using deterministic security signals
     alongside neural temporal model predictions without overwriting either output.
     """
+    version = "1.0.0"
 
     # Keyword lists for deterministic detection
     SENSITIVE_RESOURCE_KEYWORDS = [
