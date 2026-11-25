@@ -260,6 +260,38 @@ if(Torch_FOUND)
 endif()
 
 # -----------------------------------------------------------------------------
+# Target: nexus_engine_bridge (Day 6 Engine Bridge for FastAPI & CLI)
+# -----------------------------------------------------------------------------
+if(Torch_FOUND)
+  add_executable(nexus_engine_bridge
+    src/engine_bridge.cpp
+    src/nexus_model.cpp
+    src/attack_path.cpp
+    src/rgcn.cpp
+    src/graph_engine.cpp
+    src/telemetry_collector.cpp
+  )
+
+  target_include_directories(nexus_engine_bridge PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${TORCH_INCLUDE_DIRS}
+  )
+
+  target_link_libraries(nexus_engine_bridge PRIVATE
+    ${TORCH_LIBRARIES}
+    nlohmann_json::nlohmann_json
+  )
+
+  set_property(TARGET nexus_engine_bridge PROPERTY CXX_STANDARD 17)
+  set_property(TARGET nexus_engine_bridge PROPERTY CXX_STANDARD_REQUIRED ON)
+  set_property(TARGET nexus_engine_bridge PROPERTY CXX_EXTENSIONS OFF)
+
+  if(DEFINED TORCH_CXX_FLAGS)
+    target_compile_options(nexus_engine_bridge PRIVATE ${TORCH_CXX_FLAGS})
+  endif()
+endif()
+
+# -----------------------------------------------------------------------------
 # CTest Enablement
 # -----------------------------------------------------------------------------
 enable_testing()
