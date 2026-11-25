@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
 NEXUS API End-to-End Verification Test
-Validates all FastAPI bridge endpoints against live C++17 LibTorch engine inference:
+Validates all FastAPI bridge endpoints against live C++17 LibTorch engine inference
+and Explainable Hybrid Risk Engine contract:
   - GET /health
-  - POST /api/events/ingest
-  - GET /api/graph/snapshot
+  - POST /api/events/ingest (Hybrid score, explanation, policy action)
+  - GET /api/graph/snapshot (Semantic annotations, active explanation)
   - GET /api/metrics
-  - POST /api/experiments/run
+  - POST /api/experiments/run (Normal vs Adversarial vs Unseen comparison)
   - POST /api/graph/reset
 """
 
@@ -29,8 +30,9 @@ def test_health():
     data = response.json()
     assert data["status"] == "healthy", f"Expected healthy status, got {data}"
     assert data["cpp_engine"]["model_loaded"] is True, "Model should be loaded"
+    assert "hybrid_risk_engine" in data, "Should contain hybrid_risk_engine status"
     assert "agntid_integration" in data, "Should contain agntid_integration findings"
-    print(f"Health check PASSED: model_loaded={data['cpp_engine']['model_loaded']}, AgntID installed={data['agntid_integration']['sdk_installed']}")
+    print(f"Health check PASSED: model_loaded={data['cpp_engine']['model_loaded']}, HybridEngine={data['hybrid_risk_engine']['status']}, AgntID installed={data['agntid_integration']['sdk_installed']}")
 
 
 def test_ingest_event():
@@ -59,9 +61,18 @@ def test_ingest_event():
     assert "confidence" in data["prediction"]
     assert "probabilities" in data["prediction"]
     assert len(data["prediction"]["probabilities"]) == 4
-    assert "agntid_decision" in data, "Response should include independent AgntID decision"
-    assert data["agntid_decision"]["decision"] == "NOT_EVALUATED"
-    print(f"Ingest event PASSED: prediction={data['prediction']['class_name']} (conf={data['prediction']['confidence']:.3f}), latency={data['latency_ms']:.2f}ms, AgntID={data['agntid_decision']['decision']}")
+
+    # Verify Hybrid Risk Engine fields
+    assert "hybrid_assessment" in data, "Must contain hybrid_assessment"
+    assert "evidence_score" in data and data["evidence_score"] >= 25, f"Expected evidence score >= 25, got {data.get('evidence_score')}"
+    assert "policy_risk" in data
+    assert "recommended_action" in data
+    assert "actual_enforcement_status" in data
+    assert "attack_explanation" in data
+    assert "narrative" in data["attack_explanation"]
+    assert data["actual_enforcement_status"].startswith("NOT_ENFORCED")
+
+    print(f"Ingest event PASSED: prediction={data['prediction']['class_name']}, EvidenceScore={data['evidence_score']}, PolicyRisk={data['policy_risk']}, Action='{data['recommended_action']}'")
 
 
 def test_graph_snapshot():
@@ -72,7 +83,10 @@ def test_graph_snapshot():
     assert data["status"] == "ok"
     assert "nodes" in data and len(data["nodes"]) > 0
     assert "edges" in data and len(data["edges"]) > 0
-    print(f"Graph snapshot PASSED: nodes={len(data['nodes'])}, edges={len(data['edges'])}, top_paths={len(data.get('top_paths', []))}")
+    # Check semantic node annotations
+    assert "is_sensitive" in data["nodes"][0]
+    assert "latest_hybrid_assessment" in data
+    print(f"Graph snapshot PASSED: nodes={len(data['nodes'])}, edges={len(data['edges'])}, has_hybrid_state={data['latest_hybrid_assessment'] is not None}")
 
 
 def test_metrics():
@@ -96,7 +110,12 @@ def test_experiment_normal():
     assert data["status"] == "completed"
     assert data["scenario"] == "normal"
     assert data["total_steps"] == 4
-    print(f"Normal experiment PASSED: total_steps={data['total_steps']}, highest_risk={data['summary']['highest_risk_detected']}")
+
+    summary = data["summary"]
+    assert summary["policy_risk_detected"] == "Normal", f"Normal scenario should have Normal policy risk, got {summary['policy_risk_detected']}"
+    assert summary["peak_evidence_score"] < 25, f"Expected peak evidence score < 25, got {summary['peak_evidence_score']}"
+    assert summary["recommended_action"] == "Continue monitoring"
+    print(f"Normal experiment PASSED: steps={data['total_steps']}, policy_risk={summary['policy_risk_detected']}, evidence_score={summary['peak_evidence_score']}, action='{summary['recommended_action']}'")
 
 
 def test_experiment_adversarial():
@@ -109,9 +128,18 @@ def test_experiment_adversarial():
     assert data["scenario"] == "adversarial_exfil"
     assert data["total_steps"] == 4
     assert len(data["steps"]) == 4
-    # Check that attack paths or elevated risk were captured
-    assert data["summary"]["detected_attack_paths_count"] > 0 or data["summary"]["highest_risk_detected"] != "Normal"
-    print(f"Adversarial experiment PASSED: steps={data['total_steps']}, highest_risk={data['summary']['highest_risk_detected']}, attack_paths={data['summary']['detected_attack_paths_count']}")
+
+    summary = data["summary"]
+    # Adversarial exfil accesses config.env (+25), admin (+25), exfil (+35), full chain (+10), neural (+10) => Score >= 95
+    assert summary["policy_risk_detected"] in ["HighRisk", "Critical"], f"Expected HighRisk or Critical, got {summary['policy_risk_detected']}"
+    assert summary["peak_evidence_score"] >= 75, f"Expected evidence score >= 75 for exfil, got {summary['peak_evidence_score']}"
+    assert "attack_explanation" in summary and summary["attack_explanation"] is not None
+    assert summary["attack_explanation"]["sensitive_resource"] == "credentials/config.env"
+    assert summary["attack_explanation"]["privilege_or_role"] == "ADMIN"
+    assert "model_vs_evidence_comparison" in summary
+    assert summary["actual_enforcement_status"].startswith("NOT_ENFORCED")
+    print(f"Adversarial experiment PASSED: steps={data['total_steps']}, policy_risk={summary['policy_risk_detected']}, peak_evidence_score={summary['peak_evidence_score']}")
+    print(f"  Narrative: {summary['attack_explanation']['narrative']}")
 
 
 def test_experiment_unseen():
@@ -123,7 +151,9 @@ def test_experiment_unseen():
     assert data["status"] == "completed"
     assert data["scenario"] == "unseen_attack"
     assert data["total_steps"] == 4
-    print(f"Unseen attack experiment PASSED: steps={data['total_steps']}, highest_risk={data['summary']['highest_risk_detected']}")
+    summary = data["summary"]
+    assert summary["peak_evidence_score"] >= 50
+    print(f"Unseen attack experiment PASSED: steps={data['total_steps']}, policy_risk={summary['policy_risk_detected']}, evidence_score={summary['peak_evidence_score']}")
 
 
 def test_graph_reset():
@@ -143,7 +173,7 @@ def test_graph_reset():
 
 def main():
     print("=" * 70)
-    print("NEXUS Day 6 End-to-End FastAPI Backend & C++ Engine Bridge Verification")
+    print("NEXUS Hybrid Risk Engine & FastAPI Backend Verification")
     print("=" * 70)
 
     # Use TestClient context manager to trigger lifespan startup and shutdown
@@ -161,7 +191,7 @@ def main():
         test_graph_reset()
 
     print("\n" + "=" * 70)
-    print("ALL DAY 6 ENDPOINTS & VERIFICATIONS PASSED SUCCESSFULLY!")
+    print("ALL HYBRID RISK & API VERIFICATIONS PASSED SUCCESSFULLY!")
     print("=" * 70)
 
 

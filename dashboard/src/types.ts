@@ -67,6 +67,9 @@ export interface GraphNode {
   type_name: NodeType;
   key: string;
   created_at: number;
+  is_sensitive?: boolean;
+  is_elevated?: boolean;
+  is_external?: boolean;
 }
 
 export interface GraphEdge {
@@ -78,6 +81,48 @@ export interface GraphEdge {
   timestamp: number;
 }
 
+export interface EvidenceSignal {
+  id: string;
+  name: string;
+  points: number;
+  reason: string;
+}
+
+export interface AttackExplanation {
+  narrative: string;
+  affected_agent: string;
+  sensitive_resource?: string | null;
+  privilege_or_role?: string | null;
+  external_destination?: string | null;
+  chronological_event_ids: string[];
+  time_span_seconds: number;
+  contributing_graph_edges: any[];
+  attack_path_score: number;
+  evidence_signals: EvidenceSignal[];
+  model_output: {
+    prediction: string;
+    confidence: number;
+  };
+  policy_recommendation: {
+    risk: RiskLevel;
+    action: string;
+  };
+  agntid_evaluation_status: string;
+  held_out_status?: string;
+}
+
+export interface HybridAssessment {
+  model_prediction: RiskLevel;
+  model_confidence: number;
+  evidence_score: number;
+  evidence_signals: EvidenceSignal[];
+  policy_risk: RiskLevel;
+  recommended_action: string;
+  actual_enforcement_status: string;
+  is_enforced: boolean;
+  attack_explanation: AttackExplanation;
+}
+
 export interface GraphSnapshot {
   status: string;
   nodes: GraphNode[];
@@ -86,6 +131,8 @@ export interface GraphSnapshot {
   active_attack_path?: AttackPath | null;
   num_nodes?: number;
   num_edges?: number;
+  latest_hybrid_assessment?: HybridAssessment | null;
+  active_attack_explanation?: AttackExplanation | null;
 }
 
 export interface AgntIDDecision {
@@ -109,6 +156,13 @@ export interface IngestResponse {
     nodes: number;
     edges: number;
   };
+  hybrid_assessment?: HybridAssessment;
+  evidence_score?: number;
+  evidence_signals?: EvidenceSignal[];
+  policy_risk?: RiskLevel;
+  recommended_action?: string;
+  actual_enforcement_status?: string;
+  attack_explanation?: AttackExplanation;
 }
 
 export interface HealthResponse {
@@ -122,6 +176,11 @@ export interface HealthResponse {
     nodes_count: number;
     edges_count: number;
     sequence_length: number;
+  };
+  hybrid_risk_engine?: {
+    status: string;
+    version: string;
+    scoring_weights: Record<string, number>;
   };
   agntid_integration: {
     sdk_installed: boolean;
@@ -164,28 +223,49 @@ export interface MetricsData {
       fpr_temporal: number;
       fpr_static: number;
     };
+    temporal_model_test?: {
+      macro_f1: number;
+      avg_latency_ms: number;
+      false_negative_rate: number;
+      false_positive_rate: number;
+      f1_per_class: number[];
+      precision_per_class: number[];
+      recall_per_class: number[];
+      confusion_matrix: number[][];
+    };
+    train_loss_history?: number[];
+    val_loss_history?: number[];
   };
   manifest?: {
-    dataset_version: string;
-    total_scenarios: number;
-    total_events: number;
-    splits: {
+    dataset_name?: string;
+    version?: string;
+    dataset_version?: string;
+    total_scenarios?: number;
+    total_events?: number;
+    scenarios_summary?: any;
+    splits?: {
       train: { scenarios: number; events: number };
       val: { scenarios: number; events: number };
       test: { scenarios: number; events: number };
       test_unseen: { scenarios: number; events: number };
     };
-    withheld_attack_templates: string[];
+    withheld_attack_templates: any[];
   };
 }
 
 export interface ExperimentStep {
+  step_index?: number;
   event: TelemetryEvent;
   tool_result: any;
   nexus_prediction: RiskPrediction;
   latency_ms: number;
   attack_paths: AttackPath[];
   agntid_decision: AgntIDDecision;
+  hybrid_assessment?: HybridAssessment;
+  evidence_score?: number;
+  evidence_signals?: EvidenceSignal[];
+  policy_risk?: RiskLevel;
+  recommended_action?: string;
 }
 
 export interface ExperimentResponse {
@@ -200,5 +280,17 @@ export interface ExperimentResponse {
     active_attack_path?: AttackPath | null;
     agntid_enforcement_count: number;
     agntid_available: boolean;
+    policy_risk_detected?: RiskLevel;
+    peak_evidence_score?: number;
+    recommended_action?: string;
+    actual_enforcement_status?: string;
+    attack_explanation?: AttackExplanation | null;
+    model_vs_evidence_comparison?: {
+      neural_model_prediction: string;
+      deterministic_evidence_score: number;
+      policy_risk: string;
+      recommended_action: string;
+      actual_enforcement_status: string;
+    };
   };
 }

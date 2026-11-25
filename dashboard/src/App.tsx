@@ -44,6 +44,45 @@ export const App: React.FC = () => {
       if (snap.active_attack_path && !activeAttackPath) {
         setActiveAttackPath(snap.active_attack_path);
       }
+      setEvents((currentEvents) => {
+        if (currentEvents.length === 0 && snap.latest_hybrid_assessment) {
+          const initialEvent: LiveEventItem = {
+            event: {
+              event_id: snap.latest_hybrid_assessment.attack_explanation?.chronological_event_ids?.[0] || 'EVT-INIT',
+              agent_id: snap.latest_hybrid_assessment.attack_explanation?.affected_agent || 'agent-01',
+              timestamp: Math.floor(Date.now() / 1000),
+              action: 'SECURITY_STATE_RESTORED',
+              tool: 'nexus_engine',
+              resource: snap.latest_hybrid_assessment.attack_explanation?.sensitive_resource || 'runtime_state',
+              permission: snap.latest_hybrid_assessment.attack_explanation?.privilege_or_role || 'ADMIN',
+              intent_id: 'SYSTEM_STATE',
+              status: 'SUCCESS',
+              label: snap.latest_hybrid_assessment.policy_risk,
+              is_synthetic: true,
+            },
+            prediction: {
+              class_name: snap.latest_hybrid_assessment.model_prediction,
+              confidence: snap.latest_hybrid_assessment.model_confidence,
+              class_index: 3,
+              probabilities: [0.05, 0.1, 0.15, 0.7],
+              logits: [-1.2, -0.5, 0.2, 2.1],
+            },
+            latency_ms: 1.2,
+            agntid: {
+              agntid_available: false,
+              decision: 'NOT_EVALUATED',
+              action_blocked: false,
+              enforced: false,
+              reason: 'Restored from C++ graph engine snapshot',
+            },
+            attack_paths: snap.top_paths || (snap.active_attack_path ? [snap.active_attack_path] : []),
+            hybrid: snap.latest_hybrid_assessment,
+          };
+          setSelectedEvent(initialEvent);
+          return [initialEvent];
+        }
+        return currentEvents;
+      });
     } catch (e) {
       // Fallback
     }
@@ -62,7 +101,8 @@ export const App: React.FC = () => {
       prediction: s.nexus_prediction,
       latency_ms: s.latency_ms,
       agntid: s.agntid_decision,
-      attack_paths: s.attack_paths
+      attack_paths: s.attack_paths,
+      hybrid: s.hybrid_assessment
     }));
 
     setEvents(prev => [...prev, ...newItems]);

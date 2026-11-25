@@ -200,6 +200,9 @@ export const LiveGraphView: React.FC<LiveGraphViewProps> = ({
 
       list.forEach((n, rowIndex) => {
         const isAttackNode = attackPathNodeSet.has(n.id);
+        const isTargetNode = activeAttackPath?.steps && 
+          activeAttackPath.steps.length > 0 && 
+          activeAttackPath.steps[activeAttackPath.steps.length - 1].destination_id === n.id;
         const style = nodeTypeColors[n.type_name] || nodeTypeColors.Resource;
 
         result.push({
@@ -212,11 +215,19 @@ export const LiveGraphView: React.FC<LiveGraphViewProps> = ({
             node: n,
             label: (
               <div
-                className={`px-3 py-2 rounded-lg border shadow-lg cursor-pointer transition-all ${style.bg} ${
-                  isAttackNode
-                    ? 'border-red-500 shadow-red-500/50 ring-2 ring-red-500 animate-pulse'
+                className={`px-3 py-2 rounded-lg border shadow-lg cursor-pointer transition-all relative ${style.bg} ${
+                  isTargetNode
+                    ? 'border-red-500 shadow-red-500/80 ring-4 ring-red-500/60 animate-bounce'
+                    : isAttackNode
+                    ? 'border-red-500 shadow-red-500/50 ring-2 ring-red-500'
                     : selectedNode?.id === n.id
                     ? 'border-cyan-400 ring-2 ring-cyan-400'
+                    : n.is_sensitive
+                    ? 'border-amber-500/80 shadow-amber-500/20'
+                    : n.is_elevated
+                    ? 'border-rose-500/80 shadow-rose-500/20'
+                    : n.is_external
+                    ? 'border-red-500/80 shadow-red-500/20'
                     : `${style.border} hover:border-gray-300`
                 }`}
                 onClick={() => setSelectedNode(n)}
@@ -228,8 +239,31 @@ export const LiveGraphView: React.FC<LiveGraphViewProps> = ({
                   </span>
                   <span className="text-[9px] font-mono text-gray-500">#{n.id}</span>
                 </div>
-                <div className={`mt-1 font-mono text-xs font-semibold truncate max-w-[150px] ${style.text}`}>
+                <div className={`mt-1 font-mono text-xs font-semibold truncate max-w-[160px] ${style.text}`}>
                   {n.key}
+                </div>
+                {/* Semantic Badges */}
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {isTargetNode && (
+                    <span className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded bg-red-600 text-white animate-pulse">
+                      TARGET EGRESS
+                    </span>
+                  )}
+                  {n.is_sensitive && (
+                    <span className="text-[8px] font-mono font-bold px-1 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                      SENSITIVE
+                    </span>
+                  )}
+                  {n.is_elevated && (
+                    <span className="text-[8px] font-mono font-bold px-1 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                      ELEVATED
+                    </span>
+                  )}
+                  {n.is_external && !isTargetNode && (
+                    <span className="text-[8px] font-mono font-bold px-1 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/40">
+                      EXTERNAL
+                    </span>
+                  )}
                 </div>
               </div>
             ),
@@ -444,6 +478,30 @@ export const LiveGraphView: React.FC<LiveGraphViewProps> = ({
                 <span className="text-gray-500 block text-[10px] uppercase">Created At</span>
                 <span className="text-gray-300">{selectedNode.created_at}</span>
               </div>
+
+              {/* Semantic Flags */}
+              {(selectedNode.is_sensitive || selectedNode.is_elevated || selectedNode.is_external) && (
+                <div className="bg-gray-900 p-2.5 rounded border border-gray-800 space-y-1.5">
+                  <span className="text-gray-500 block text-[10px] uppercase">Security Classification</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedNode.is_sensitive && (
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                        Sensitive Asset
+                      </span>
+                    )}
+                    {selectedNode.is_elevated && (
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                        Elevated Permission
+                      </span>
+                    )}
+                    {selectedNode.is_external && (
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/40">
+                        External Destination
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {attackPathNodeSet.has(selectedNode.id) && (
                 <div className="bg-red-950/60 p-2.5 rounded border border-red-500/50 text-red-300">

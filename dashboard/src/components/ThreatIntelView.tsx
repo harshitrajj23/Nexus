@@ -49,6 +49,7 @@ export const ThreatIntelView: React.FC<ThreatIntelViewProps> = ({
   }
 
   const { event, prediction, latency_ms, agntid, attack_paths } = currentItem;
+  const hybrid = currentItem.hybrid;
   const paths = attack_paths || [];
   const selectedPath: AttackPath | null = paths[activePathIndex] || paths[0] || null;
 
@@ -57,6 +58,108 @@ export const ThreatIntelView: React.FC<ThreatIntelViewProps> = ({
 
   return (
     <div className="space-y-6">
+      {hybrid && (
+        <div className="bg-[#111827] border border-red-500/50 rounded-xl p-5 shadow-xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-800">
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="text-[11px] font-mono uppercase tracking-widest text-red-400 font-bold">
+                  Active Policy Recommendation
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-850 text-gray-400 border border-gray-750">
+                  Evidence-Driven
+                </span>
+              </div>
+              <h3 className="text-base font-bold text-white mt-1">
+                {hybrid.recommended_action}
+              </h3>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="text-right">
+                <span className="text-[10px] font-mono text-gray-500 uppercase block">Evidence Score</span>
+                <span className="text-lg font-bold font-mono text-white">{hybrid.evidence_score}<span className="text-xs text-gray-500">/100</span></span>
+              </div>
+              <RiskBadge level={hybrid.policy_risk} size="lg" />
+            </div>
+          </div>
+
+          {/* Narrative Explanation */}
+          <div className="bg-gray-900/90 rounded-lg p-3.5 border border-gray-800">
+            <span className="text-[10px] font-mono uppercase text-gray-400 font-semibold block mb-1">
+              Incident Narrative
+            </span>
+            <p className="text-xs leading-relaxed text-gray-200">
+              {hybrid.attack_explanation.narrative}
+            </p>
+          </div>
+
+          {/* Structured Evidence Matrix */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+            <div className="bg-gray-900/70 p-2.5 rounded border border-gray-800">
+              <span className="text-gray-500 block text-[10px] uppercase">Agent Identity</span>
+              <span className="text-blue-400 font-bold">{hybrid.attack_explanation.affected_agent || 'N/A'}</span>
+            </div>
+            <div className="bg-gray-900/70 p-2.5 rounded border border-gray-800">
+              <span className="text-gray-500 block text-[10px] uppercase">Sensitive Target</span>
+              <span className="text-amber-300 font-bold truncate block">{hybrid.attack_explanation.sensitive_resource || 'None observed'}</span>
+            </div>
+            <div className="bg-gray-900/70 p-2.5 rounded border border-gray-800">
+              <span className="text-gray-500 block text-[10px] uppercase">Privilege Level</span>
+              <span className="text-rose-400 font-bold">{hybrid.attack_explanation.privilege_or_role || 'DEFAULT'}</span>
+            </div>
+            <div className="bg-gray-900/70 p-2.5 rounded border border-gray-800">
+              <span className="text-gray-500 block text-[10px] uppercase">External Egress</span>
+              <span className="text-red-400 font-bold truncate block">{hybrid.attack_explanation.external_destination || 'None observed'}</span>
+            </div>
+          </div>
+
+          {/* Deterministic Signal Attribution Breakdown */}
+          <div className="bg-gray-900/80 rounded-lg p-3.5 border border-gray-800">
+            <div className="flex items-center justify-between pb-2 border-b border-gray-800">
+              <span className="text-[11px] font-mono uppercase font-semibold text-gray-300">
+                Deterministic Signal Attribution (+25 / +25 / +35 / +10 / +10)
+              </span>
+              <span className="text-[11px] font-mono text-cyan-400 font-semibold">
+                Model: {hybrid.model_prediction} ({(hybrid.model_confidence * 100).toFixed(1)}%)
+              </span>
+            </div>
+
+            {hybrid.evidence_signals.length === 0 ? (
+              <p className="text-xs text-gray-500 font-mono mt-2">
+                No high-risk structural signals triggered. Baseline safe activity.
+              </p>
+            ) : (
+              <div className="mt-2.5 space-y-2">
+                {hybrid.evidence_signals.map((sig) => (
+                  <div key={sig.id} className="flex items-center justify-between text-xs font-mono bg-gray-950 p-2 rounded border border-gray-850">
+                    <div className="flex items-center space-x-2">
+                      <span className="w-10 text-center font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        +{sig.points}
+                      </span>
+                      <span className="text-gray-200 font-semibold">{sig.name}</span>
+                      <span className="text-gray-400 text-[11px] hidden sm:inline">&bull; {sig.reason}</span>
+                    </div>
+                    <span className="text-[10px] text-gray-500">{sig.id}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Enforcement Transparency Disclosure */}
+          <div className="flex items-center justify-between p-3 rounded-lg bg-gray-950 border border-gray-800 text-[11px] font-mono">
+            <div className="flex items-center space-x-2">
+              <span className="text-gray-500 uppercase">Actual Enforcement Status:</span>
+              <span className="px-2 py-0.5 rounded bg-gray-800 text-amber-300 font-bold">
+                {hybrid.actual_enforcement_status}
+              </span>
+            </div>
+            <span className="text-gray-500 text-[10px] hidden sm:inline">
+              Policy recommendations advise human operators; no inline interception without active AgntID hook.
+            </span>
+          </div>
+        </div>
+      )}
       {/* Top Threat Alert Header */}
       <div className="bg-[#111827] border border-gray-800 rounded-xl p-5 shadow-md">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-gray-800">
@@ -68,7 +171,7 @@ export const ThreatIntelView: React.FC<ThreatIntelViewProps> = ({
               <div className="flex items-center space-x-2">
                 <span className="text-base font-bold text-white font-mono">{event.event_id}</span>
                 <RiskBadge
-                  level={prediction?.class_name || (event.label as RiskLevel)}
+                  level={hybrid?.policy_risk || prediction?.class_name || (event.label as RiskLevel)}
                   confidence={prediction?.confidence}
                   size="md"
                 />

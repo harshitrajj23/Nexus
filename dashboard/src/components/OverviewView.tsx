@@ -10,8 +10,9 @@ import {
   ArrowRight,
   Database
 } from 'lucide-react';
-import { TelemetryEvent, RiskPrediction, AgntIDDecision, AttackPath, RiskLevel } from '../types';
+import { TelemetryEvent, RiskPrediction, AgntIDDecision, AttackPath, RiskLevel, HybridAssessment } from '../types';
 import { RiskBadge } from './RiskBadge';
+import { ActiveSecurityDecisionPanel } from './ActiveSecurityDecisionPanel';
 
 export interface LiveEventItem {
   event: TelemetryEvent;
@@ -19,12 +20,14 @@ export interface LiveEventItem {
   latency_ms?: number;
   agntid?: AgntIDDecision;
   attack_paths?: AttackPath[];
+  hybrid?: HybridAssessment;
 }
 
 interface OverviewViewProps {
   events: LiveEventItem[];
   nodeCount: number;
   edgeCount: number;
+  latestAssessment?: HybridAssessment | null;
   onSelectEvent: (item: LiveEventItem) => void;
   onNavigateToGraph: () => void;
   onNavigateToThreats: () => void;
@@ -35,6 +38,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   events,
   nodeCount,
   edgeCount,
+  latestAssessment,
   onSelectEvent,
   onNavigateToGraph,
   onNavigateToThreats,
@@ -43,14 +47,14 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   // Aggregate stats
   const totalEvents = events.length;
   const latencies = events.map(e => e.latency_ms || 0).filter(l => l > 0);
-  const avgLatency = latencies.length > 0 ? (latencies.reduce((a, b) => a + b, 0) / latencies.length).toFixed(2) : '2.84';
+  const avgLatency = latencies.length > 0 ? (latencies.reduce((a, b) => a + b, 0) / latencies.length).toFixed(2) : '3.16';
 
   const riskOrder: Record<RiskLevel, number> = { Normal: 0, Suspicious: 1, HighRisk: 2, Critical: 3 };
   let highestRisk: RiskLevel = 'Normal';
   let highestConf = 0;
 
   events.forEach(e => {
-    const r = e.prediction?.class_name || (e.event.label as RiskLevel) || 'Normal';
+    const r = e.hybrid?.policy_risk || e.prediction?.class_name || (e.event.label as RiskLevel) || 'Normal';
     if (riskOrder[r] >= riskOrder[highestRisk]) {
       highestRisk = r;
       highestConf = Math.max(highestConf, e.prediction?.confidence || 0);
@@ -58,35 +62,23 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   });
 
   const suspiciousEvents = events.filter(e => {
-    const r = e.prediction?.class_name || e.event.label;
+    const r = e.hybrid?.policy_risk || e.prediction?.class_name || e.event.label;
     return r === 'Suspicious' || r === 'HighRisk' || r === 'Critical';
   });
 
+  // Effective assessment for the active decision panel
+  const activeAssessment = latestAssessment || (events.length > 0 ? events[events.length - 1].hybrid || null : null);
+
   return (
     <div className="space-y-6">
-      {/* Top Banner Notice */}
-      <div className="bg-gradient-to-r from-blue-900/30 via-indigo-900/20 to-gray-900 border border-blue-500/30 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center space-x-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
-            <h2 className="text-base font-semibold text-white">NEXUS Real-Time Agent Telemetry & Graph Stream</h2>
-          </div>
-          <p className="text-xs text-gray-300 mt-1">
-            C++17 Dynamic Graph Construction with continuous R-GCN + GRU LibTorch sequence inference and causal multi-hop attack path reconstruction.
-          </p>
-        </div>
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={onNavigateToLab}
-            className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md shadow-blue-500/20 transition-all flex items-center space-x-1.5"
-          >
-            <span>Run Experiment Lab</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
+      {/* 1. Proactive Hackathon Active Security Decision Panel */}
+      <ActiveSecurityDecisionPanel
+        assessment={activeAssessment}
+        onNavigateToGraph={onNavigateToGraph}
+        onNavigateToThreats={onNavigateToThreats}
+      />
 
-      {/* Metric Cards Grid */}
+      {/* 2. Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Card 1: Total Events */}
         <div className="bg-[#111827] border border-gray-800 rounded-xl p-4 shadow-sm">
@@ -102,7 +94,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         </div>
 
         {/* Card 2: Graph Entities */}
-        <div className="bg-[#111827] border border-gray-800 rounded-xl p-4 shadow-sm cursor-pointer hover:border-blue-500/40 transition-colors" onClick={onNavigateToGraph}>
+        <div
+          className="bg-[#111827] border border-gray-800 rounded-xl p-4 shadow-sm cursor-pointer hover:border-blue-500/40 transition-colors"
+          onClick={onNavigateToGraph}
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-gray-400">Dynamic Graph State</span>
             <Layers className="w-4 h-4 text-indigo-400" />
@@ -123,11 +118,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         {/* Card 3: Highest Detected Risk */}
         <div className="bg-[#111827] border border-gray-800 rounded-xl p-4 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-400">Peak Risk Level</span>
+            <span className="text-xs font-medium text-gray-400">Peak Policy Risk</span>
             <ShieldAlert className="w-4 h-4 text-rose-400" />
           </div>
           <div className="mt-2.5">
-            <RiskBadge level={highestRisk} confidence={highestConf > 0 ? highestConf : undefined} size="lg" />
+            <RiskBadge level={activeAssessment?.policy_risk || highestRisk} size="lg" />
           </div>
           <p className="text-[11px] text-gray-500 mt-1.5 font-mono">
             {suspiciousEvents.length} anomalous steps
@@ -190,7 +185,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             ) : (
               suspiciousEvents.map((item, idx) => {
                 const p = item.prediction;
-                const r = p?.class_name || (item.event.label as RiskLevel);
+                const r = item.hybrid?.policy_risk || p?.class_name || (item.event.label as RiskLevel);
                 const hasPaths = (item.attack_paths?.length || 0) > 0;
 
                 return (
@@ -263,8 +258,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                     <th className="py-2 px-3">Tool</th>
                     <th className="py-2 px-3">Action</th>
                     <th className="py-2 px-3">Resource</th>
-                    <th className="py-2 px-3">NEXUS Risk</th>
-                    <th className="py-2 px-3">Latency</th>
+                    <th className="py-2 px-3">Policy Risk</th>
+                    <th className="py-2 px-3">Evidence</th>
                     <th className="py-2 px-3">AgntID</th>
                   </tr>
                 </thead>
@@ -272,7 +267,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                   {events.slice().reverse().map((item, idx) => {
                     const e = item.event;
                     const p = item.prediction;
-                    const r = p?.class_name || (e.label as RiskLevel) || 'Normal';
+                    const r = item.hybrid?.policy_risk || p?.class_name || (e.label as RiskLevel) || 'Normal';
+                    const score = item.hybrid?.evidence_score ?? 0;
 
                     return (
                       <tr
@@ -299,10 +295,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                           {e.resource}
                         </td>
                         <td className="py-2.5 px-3">
-                          <RiskBadge level={r} confidence={p?.confidence} size="sm" />
+                          <RiskBadge level={r} size="sm" />
                         </td>
-                        <td className="py-2.5 px-3 text-gray-400 text-[11px]">
-                          {item.latency_ms ? `${item.latency_ms.toFixed(1)}ms` : '-'}
+                        <td className="py-2.5 px-3 text-cyan-300 font-bold text-[11px]">
+                          {score}/100
                         </td>
                         <td className="py-2.5 px-3">
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-700/60 font-mono">

@@ -211,11 +211,13 @@ export const ExperimentLabView: React.FC<ExperimentLabViewProps> = ({
                 </h3>
               </div>
               <p className="text-xs text-gray-400 mt-0.5 font-mono">
-                Agent ID: <span className="text-blue-400">{result.agent_id}</span> &bull; Peak Detected Risk: <span className="text-rose-400 font-bold">{result.summary.highest_risk_detected}</span>
+                Agent ID: <span className="text-blue-400">{result.agent_id}</span> &bull; Peak Evidence Score: <span className="text-white font-bold">{result.summary.peak_evidence_score ?? 0}/100</span> &bull; Neural Model: <span className="text-cyan-400 font-bold">{result.summary.highest_risk_detected}</span>
               </p>
             </div>
 
             <div className="flex items-center space-x-2">
+              <RiskBadge level={result.summary.policy_risk_detected || result.summary.highest_risk_detected} size="md" />
+
               <button
                 onClick={onNavigateToGraph}
                 className="px-3 py-1.5 rounded-lg bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white text-xs font-mono border border-blue-500/40 transition-colors flex items-center space-x-1.5"
@@ -234,12 +236,36 @@ export const ExperimentLabView: React.FC<ExperimentLabViewProps> = ({
             </div>
           </div>
 
+          {/* Policy Recommendation & Narrative Summary */}
+          {result.summary.recommended_action && (
+            <div className="bg-gray-900/90 border border-red-500/30 rounded-lg p-3.5 font-mono text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase font-bold text-red-400 tracking-wider">
+                  Recommended Policy Action
+                </span>
+                <span className="text-[10px] text-gray-500">
+                  Enforcement: {result.summary.actual_enforcement_status || 'NOT_ENFORCED'}
+                </span>
+              </div>
+              <div className="mt-1 font-bold text-white text-sm">
+                {result.summary.recommended_action}
+              </div>
+              {result.summary.attack_explanation?.narrative && (
+                <p className="mt-1.5 text-xs text-gray-300 font-sans leading-relaxed">
+                  {result.summary.attack_explanation.narrative}
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Step-by-Step Execution Cards */}
           <div className="space-y-3">
             {result.steps.map((step, idx) => {
               const e = step.event;
               const p = step.nexus_prediction;
               const agnt = step.agntid_decision;
+              const hybrid = step.hybrid_assessment;
+              const signals = hybrid?.evidence_signals || step.evidence_signals || [];
 
               return (
                 <div
@@ -256,10 +282,28 @@ export const ExperimentLabView: React.FC<ExperimentLabViewProps> = ({
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RiskBadge level={p.class_name} confidence={p.confidence} size="sm" />
+                      {hybrid && (
+                        <div className="flex items-center space-x-1 px-2 py-0.5 rounded bg-gray-800 border border-gray-750">
+                          <span className="text-[10px] text-gray-400">Score:</span>
+                          <span className="text-[11px] font-bold text-white">{hybrid.evidence_score}/100</span>
+                        </div>
+                      )}
+                      <RiskBadge level={hybrid?.policy_risk || p.class_name} size="sm" />
+                      <span className="text-[10px] text-cyan-400 hidden sm:inline">Model: {p.class_name} ({(p.confidence * 100).toFixed(0)}%)</span>
                       <span className="text-[11px] text-gray-400">{step.latency_ms.toFixed(1)}ms</span>
                     </div>
                   </div>
+
+                  {/* Signals pills */}
+                  {signals.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {signals.map((sig) => (
+                        <span key={sig.id} className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                          +{sig.points} {sig.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="mt-2.5 grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
                     <div className="bg-gray-950 p-2 rounded border border-gray-850">
@@ -269,9 +313,11 @@ export const ExperimentLabView: React.FC<ExperimentLabViewProps> = ({
                     </div>
 
                     <div className="bg-gray-950 p-2 rounded border border-gray-850">
-                      <span className="text-gray-500 block text-[10px] uppercase">Sandboxed Execution</span>
-                      <span className="text-emerald-400 font-semibold">SUCCESS (Sandbox Local)</span>
-                      <span className="text-gray-500 block text-[9px]">Mock environment</span>
+                      <span className="text-gray-500 block text-[10px] uppercase">Recommended Action</span>
+                      <span className="text-amber-300 font-semibold truncate block">
+                        {hybrid?.recommended_action || step.recommended_action || 'Continue monitoring'}
+                      </span>
+                      <span className="text-gray-500 block text-[9px]">Status: NOT_ENFORCED</span>
                     </div>
 
                     <div className="bg-gray-950 p-2 rounded border border-gray-850">

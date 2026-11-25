@@ -164,28 +164,17 @@ class AgntIDBridge:
             self.action_history.append(decision)
             return decision
 
-        # If official AgntID SDK or mock/endpoint was provided:
-        try:
-            # Placeholder for official SDK evaluation if dynamically loaded
-            decision = {
-                "agntid_available": True,
-                "decision": "ALLOW",
-                "action_blocked": False,
-                "enforced": True,
-                "reason": "AgntID official evaluation passed",
-                "raw_response": {"status": "ALLOW"},
-                "event_id": event.get("event_id", "")
-            }
-        except Exception as err:
-            decision = {
-                "agntid_available": True,
-                "decision": "ERROR",
-                "action_blocked": False,
-                "enforced": False,
-                "reason": f"AgntID evaluation exception: {err}",
-                "raw_response": None,
-                "event_id": event.get("event_id", "")
-            }
+        # Discovery alone is not an evaluation. An official SDK/endpoint adapter must
+        # be implemented and invoked before NEXUS can report an allow/block decision.
+        decision = {
+            "agntid_available": True,
+            "decision": "NOT_INVOKED",
+            "action_blocked": False,
+            "enforced": False,
+            "reason": "AgntID capability was detected, but no official evaluation adapter is configured; NEXUS policy remains advisory.",
+            "raw_response": None,
+            "event_id": event.get("event_id", "")
+        }
 
         self.action_history.append(decision)
         return decision

@@ -1,23 +1,29 @@
 {
-  "generated_at": 1795604001,
-  "platform": "NEXUS C++17 LibTorch Dynamic Graph Threat Intelligence",
+  "generated_at": 1795606209,
+  "platform": "NEXUS C++17 LibTorch Dynamic Graph Threat Intelligence with Hybrid Risk Engine",
   "experiments": [
     {
       "id": "EXPERIMENT_A_NORMAL",
       "title": "Normal Behaviour - Repository Analysis & Audit",
       "file": "experiment_a_normal.json",
+      "policy_risk": "Normal",
+      "evidence_score": 10,
       "status": "PASSED"
     },
     {
       "id": "EXPERIMENT_B_ADVERSARIAL",
       "title": "Multi-Step Attack Vector - Credential Exfiltration",
       "file": "experiment_b_adversarial.json",
+      "policy_risk": "Critical",
+      "evidence_score": 100,
       "status": "PASSED"
     },
     {
       "id": "EXPERIMENT_C_UNSEEN",
       "title": "Unseen Attack Combination - Generalization Evaluation",
       "file": "experiment_c_unseen.json",
+      "policy_risk": "Critical",
+      "evidence_score": 100,
       "status": "PASSED"
     }
   ]
