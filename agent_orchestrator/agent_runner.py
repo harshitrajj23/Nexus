@@ -8,6 +8,7 @@ passes events through the AgntID bridge, and records independent runtime securit
 """
 
 import os
+import sys
 import json
 import time
 import shutil
@@ -15,7 +16,16 @@ import tempfile
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
-from agntid_bridge import AgntIDBridge, inspect_agntid_environment
+_CURRENT_DIR = Path(__file__).resolve().parent
+_REPO_ROOT = _CURRENT_DIR.parent
+for _p in [str(_CURRENT_DIR), str(_REPO_ROOT)]:
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
+try:
+    from agent_orchestrator.agntid_bridge import AgntIDBridge, inspect_agntid_environment
+except ImportError:
+    from agntid_bridge import AgntIDBridge, inspect_agntid_environment
 
 
 class SandboxedAgent:

@@ -6,19 +6,32 @@ inference alongside AgntID runtime security evaluation and sandboxed experiments
 """
 
 import os
+import sys
 import json
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
+# Ensure both orchestrator dir and repo root are in sys.path
+_CURRENT_DIR = Path(__file__).resolve().parent
+_REPO_ROOT = _CURRENT_DIR.parent
+for _p in [str(_CURRENT_DIR), str(_REPO_ROOT)]:
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from agntid_bridge import AgntIDBridge, inspect_agntid_environment
-from agent_runner import SandboxedAgent
-from cpp_bridge import NexusCppBridge
+try:
+    from agent_orchestrator.agntid_bridge import AgntIDBridge, inspect_agntid_environment
+    from agent_orchestrator.agent_runner import SandboxedAgent
+    from agent_orchestrator.cpp_bridge import NexusCppBridge
+except ImportError:
+    from agntid_bridge import AgntIDBridge, inspect_agntid_environment
+    from agent_runner import SandboxedAgent
+    from cpp_bridge import NexusCppBridge
 
 # Global bridge singletons
 cpp_engine: Optional[NexusCppBridge] = None
