@@ -235,10 +235,7 @@ int main(int argc, char* argv[]) {
 
                 // 3. TemporalRiskModel forward inference
                 torch::NoGradGuard no_grad;
-                nexus::nn::RiskPrediction prediction = model->forward(sequence_window, running_hidden);
-                if (prediction.temporal_state.defined()) {
-                    running_hidden = prediction.temporal_state.detach();
-                }
+                nexus::nn::RiskPrediction prediction = model->forward(sequence_window, std::nullopt);
 
                 // 4. AttackPathAnalyzer path reconstruction
                 nexus::analysis::AttackPathAnalyzer analyzer;

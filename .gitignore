@@ -54,6 +54,11 @@ Thumbs.db
 *.swo
 *~
 
+# Node & Frontend dependencies
+node_modules/
+**/node_modules/
+dashboard/dist/
+
 # Credentials, secrets, and private keys
 .env
 .env.*

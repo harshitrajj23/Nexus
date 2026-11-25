@@ -111,6 +111,11 @@ RiskPrediction TemporalRiskModelImpl::forward(
     torch::Tensor init_h;
     if (h_0.has_value() && h_0->defined()) {
         init_h = h_0.value();
+        if (init_h.dim() == 1) {
+            init_h = init_h.view({num_gru_layers_, batch_size, gru_hidden_dim_});
+        } else if (init_h.dim() == 2) {
+            init_h = init_h.unsqueeze(0);
+        }
     } else {
         init_h = torch::zeros({num_gru_layers_, batch_size, gru_hidden_dim_}, seq_input.options());
     }

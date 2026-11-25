@@ -1,0 +1,86 @@
+@import '@xyflow/react/dist/style.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: #0B0F19;
+  color: #F3F4F6;
+  overflow-x: hidden;
+}
+
+/* React Flow custom dark styling */
+.react-flow {
+  background-color: #0B0F19 !important;
+}
+
+.react-flow__background {
+  background-color: #0B0F19 !important;
+}
+
+.react-flow__controls {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  border: 1px solid #1F2937;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.react-flow__controls button {
+  background-color: #111827 !important;
+  color: #9CA3AF !important;
+  border-bottom: 1px solid #1F2937 !important;
+}
+
+.react-flow__controls button:hover {
+  background-color: #1F2937 !important;
+  color: #F3F4F6 !important;
+}
+
+/* Animated glowing stroke for detected attack path edges */
+@keyframes attackPathPulse {
+  0% {
+    stroke-dashoffset: 24;
+    filter: drop-shadow(0 0 3px #EF4444);
+  }
+  50% {
+    filter: drop-shadow(0 0 8px #EF4444);
+  }
+  100% {
+    stroke-dashoffset: 0;
+    filter: drop-shadow(0 0 3px #EF4444);
+  }
+}
+
+.attack-path-edge {
+  stroke: #EF4444 !important;
+  stroke-width: 3.5px !important;
+  stroke-dasharray: 6 3 !important;
+  animation: attackPathPulse 1.5s linear infinite !important;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0B0F19;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1F2937;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #374151;
+}
