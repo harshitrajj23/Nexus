@@ -294,3 +294,32 @@ export interface ExperimentResponse {
     };
   };
 }
+
+export interface IntentComparisonRow {
+  scenario: string;
+  declared_intent: string;
+  tool_action: string;
+  resource: string;
+  nexus_policy: RiskLevel;
+  nexus_score: number;
+  agntid_decision: string;
+  enforcement: string;
+  finding: string;
+}
+
+export interface IntentExperimentResponse {
+  status: string;
+  timestamp: number;
+  agntid_status: {
+    available: boolean;
+    source: string;
+    inspection: any;
+  };
+  conditions: Record<string, any>;
+  comparison_matrix: IntentComparisonRow[];
+  gap_analysis: {
+    identical_resource_contrast: string;
+    temporal_reconstruction_value: string;
+    enforcement_transparency: string;
+  };
+}

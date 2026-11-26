@@ -15,6 +15,12 @@ import uuid
 from typing import Dict, Any, Optional, List
 
 
+try:
+    from agent_orchestrator.agntid_adapter import get_agntid_adapter, BaseAgntIDAdapter
+except ImportError:
+    from agntid_adapter import get_agntid_adapter, BaseAgntIDAdapter
+
+
 def inspect_agntid_environment() -> Dict[str, Any]:
     """
     Inspects Python environment, system PATH, and environment variables
@@ -79,17 +85,19 @@ class AgntIDBridge:
     def __init__(self, agent_id: str = "agent_default"):
         self.agent_id = agent_id
         self.inspection = inspect_agntid_environment()
+        self.adapter: BaseAgntIDAdapter = get_agntid_adapter()
         self.evaluated_count = 0
         self.action_history: List[Dict[str, Any]] = []
 
     def is_available(self) -> bool:
-        """Returns True if an official AgntID SDK, CLI, or endpoint is actively present."""
-        return self.inspection["enforcement_active"]
+        """Returns True if an official AgntID SDK, CLI, or endpoint is actively present and ready."""
+        return self.adapter.is_available()
 
     def get_status(self) -> Dict[str, Any]:
         """Returns diagnostic status of the AgntID integration."""
         return {
             "available": self.is_available(),
+            "source": self.adapter.get_source(),
             "inspection": self.inspection,
             "evaluated_count": self.evaluated_count
         }
@@ -142,39 +150,18 @@ class AgntIDBridge:
         }
         return event
 
-    def evaluate_event(self, event: Dict[str, Any]) -> Dict[str, Any]:
+    def evaluate_event(
+        self,
+        event: Dict[str, Any],
+        intent_context: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
-        Evaluates a TelemetryEvent against AgntID runtime security rules.
+        Evaluates a TelemetryEvent against AgntID runtime security rules via the adapter.
         If an official AgntID SDK or endpoint is available, queries it.
         If not available, records AgntID's status honestly as NOT_EVALUATED
         without fabricating fake enforcement blocks.
         """
         self.evaluated_count += 1
-
-        if not self.is_available():
-            decision = {
-                "agntid_available": False,
-                "decision": "NOT_EVALUATED",
-                "action_blocked": False,
-                "enforced": False,
-                "reason": "AgntID SDK/CLI not installed in environment; recorded independently from NEXUS predictions",
-                "raw_response": None,
-                "event_id": event.get("event_id", "")
-            }
-            self.action_history.append(decision)
-            return decision
-
-        # Discovery alone is not an evaluation. An official SDK/endpoint adapter must
-        # be implemented and invoked before NEXUS can report an allow/block decision.
-        decision = {
-            "agntid_available": True,
-            "decision": "NOT_INVOKED",
-            "action_blocked": False,
-            "enforced": False,
-            "reason": "AgntID capability was detected, but no official evaluation adapter is configured; NEXUS policy remains advisory.",
-            "raw_response": None,
-            "event_id": event.get("event_id", "")
-        }
-
+        decision = self.adapter.evaluate(event, intent_context=intent_context)
         self.action_history.append(decision)
         return decision

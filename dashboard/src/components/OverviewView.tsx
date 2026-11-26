@@ -32,6 +32,7 @@ interface OverviewViewProps {
   onNavigateToGraph: () => void;
   onNavigateToThreats: () => void;
   onNavigateToLab: () => void;
+  onNavigateToIntent?: () => void;
 }
 
 export const OverviewView: React.FC<OverviewViewProps> = ({
@@ -43,6 +44,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   onNavigateToGraph,
   onNavigateToThreats,
   onNavigateToLab,
+  onNavigateToIntent,
 }) => {
   // Aggregate stats
   const totalEvents = events.length;
@@ -90,6 +92,15 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           </div>
 
           <div className="flex items-center space-x-2">
+            {onNavigateToIntent && (
+              <button
+                onClick={onNavigateToIntent}
+                className="px-3.5 py-1.5 rounded-lg bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white text-xs font-mono border border-blue-500/40 transition-colors flex items-center space-x-1.5"
+              >
+                <span>Intent & AgntID</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            )}
             <button
               onClick={onNavigateToLab}
               className="px-3.5 py-1.5 rounded-lg bg-purple-600/30 hover:bg-purple-600 text-purple-300 hover:text-white text-xs font-mono border border-purple-500/40 transition-colors flex items-center space-x-1.5"

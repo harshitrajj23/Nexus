@@ -382,6 +382,28 @@ def run_experiment(req: ExperimentRunRequest) -> Dict[str, Any]:
     }
 
 
+@app.post("/api/experiments/intent-boundary", summary="Run Intent-Boundary & Decision Comparison Experiment")
+@app.get("/api/experiments/intent-boundary", summary="Get Latest Intent-Boundary Experiment Results")
+def run_intent_experiment() -> Dict[str, Any]:
+    """
+    Executes the 3-condition Intent-Boundary Experiment contrasting identical tool calls
+    under Approved Incident-Response, Suspicious Exfiltration, and Context Conflict intents.
+    Returns the comparison matrix and agreement analysis.
+    """
+    if not cpp_engine:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="C++ Engine not initialized")
+
+    try:
+        from agent_orchestrator.intent_experiment import run_intent_boundary_experiment
+        res = run_intent_boundary_experiment(cpp_engine=cpp_engine, hybrid_engine=hybrid_engine)
+        return res
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Intent experiment execution failed: {e}"
+        )
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=False)

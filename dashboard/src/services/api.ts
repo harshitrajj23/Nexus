@@ -4,7 +4,8 @@ import {
   MetricsData,
   IngestResponse,
   ExperimentResponse,
-  TelemetryEvent
+  TelemetryEvent,
+  IntentExperimentResponse
 } from '../types';
 
 const API_BASE = 'http://localhost:8000';
@@ -55,6 +56,12 @@ export async function runExperiment(
 
 export async function resetGraph(): Promise<{ status: string; message: string }> {
   return fetchJson<{ status: string; message: string }>(`${API_BASE}/api/graph/reset`, {
+    method: 'POST'
+  });
+}
+
+export async function runIntentBoundaryExperiment(): Promise<IntentExperimentResponse> {
+  return fetchJson<IntentExperimentResponse>(`${API_BASE}/api/experiments/intent-boundary`, {
     method: 'POST'
   });
 }

@@ -151,6 +151,17 @@ def check_cmake_and_ctest() -> CheckResult:
     return ("WARN", "CMake Toolchain", "cmake/ctest not in PATH. Required only if rebuilding C++ engine.")
 
 
+def check_agntid_integration() -> CheckResult:
+    try:
+        from agent_orchestrator.agntid_adapter import get_agntid_adapter
+        adapter = get_agntid_adapter()
+        if adapter.is_available():
+            return ("PASS", "Official AgntID Integration", f"Configured and verified via {adapter.get_source()}")
+        return ("INFO", "Official AgntID Integration", "Unavailable (unconfigured); NEXUS remains advisory")
+    except Exception as e:
+        return ("INFO", "Official AgntID Integration", f"Unavailable ({e}); NEXUS remains advisory")
+
+
 def run_preflight() -> bool:
     print("=" * 72)
     print("NEXUS Hackathon Judge Preflight Verification")
@@ -163,6 +174,7 @@ def run_preflight() -> bool:
         check_cpp_engine(),
         check_model_checkpoint(),
         check_hybrid_risk_engine(),
+        check_agntid_integration(),
         check_node_and_npm(),
         check_dashboard_build(),
         check_cmake_and_ctest(),

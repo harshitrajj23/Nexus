@@ -8,11 +8,12 @@ import {
   Radio,
   CheckCircle2,
   AlertTriangle,
-  RotateCcw
+  RotateCcw,
+  SlidersHorizontal
 } from 'lucide-react';
 import { HealthResponse } from '../types';
 
-export type TabType = 'overview' | 'graph' | 'threats' | 'model' | 'lab';
+export type TabType = 'overview' | 'graph' | 'threats' | 'model' | 'lab' | 'intent';
 
 interface NavbarProps {
   activeTab: TabType;
@@ -37,6 +38,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'threats', label: 'Threat Intel', icon: <ShieldAlert className="w-4 h-4" /> },
     { id: 'model', label: 'Model Intel', icon: <Cpu className="w-4 h-4" /> },
     { id: 'lab', label: 'Experiment Lab', icon: <FlaskConical className="w-4 h-4" /> },
+    { id: 'intent', label: 'Intent & AgntID', icon: <SlidersHorizontal className="w-4 h-4" /> },
   ];
 
   return (

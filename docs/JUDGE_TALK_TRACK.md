@@ -38,14 +38,15 @@ Notice how the policy recommendation immediately updates to:
 ```
 
 ```
-[00:55 - 00:75] SECTION D: TECHNICAL CREDIBILITY & CAUSAL GRAPH
-[ACTION: Switch to Live Graph and Threat Intel tab]
-"Under the hood, NEXUS maintains a dynamic heterogeneous graph across 7 entity types and
+[00:55 - 00:75] SECTION D: TECHNICAL CREDIBILITY & INTENT BOUNDARY
+[ACTION: Switch to 'Intent & AgntID' tab and 'Live Graph']
+"In the 'Intent & AgntID' tab, we test identical tool actions on credentials/config.env under two different intents:
+- Under approved rotation intent: the credential read stays bounded, scoring 40/100 (Review).
+- Under exfiltration intent: that same read chains to admin escalation and egress, hitting 100/100 (Critical).
+Under the hood, NEXUS maintains a dynamic heterogeneous graph across 7 entity types and
 7 relation types in native C++17 LibTorch, processing each event in under 5 milliseconds.
 In our ablation study, a static graph snapshot failed completely with a 100% False Negative Rate.
-Adding GRU temporal recurrence eliminated that blindspot.
-On screen, you can see our multi-hop causal DFS tracing the exact path from the compromised agent
-through the stolen credential and elevated role to the unauthorized external destination."
+Adding GRU temporal recurrence eliminated that blindspot."
 ```
 
 ```

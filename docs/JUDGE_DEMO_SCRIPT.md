@@ -72,3 +72,4 @@ This document provides the exact word-for-word spoken narration, physical UI act
 | **Threat Intel** | Chronological hops table, attribution weights ($a_e$), structural multipliers (2.5x, 2.0x, 3.0x), human narrative. | Complete explainability for security analysts with transparent mathematical attribution. |
 | **Model Intel** | Confusion matrix, training loss curves, and empirical ablation table comparing temporal vs static models. | Proof of why temporal modeling is mandatory: static graph models suffered a 100% False Negative Rate. |
 | **Experiment Lab** | Live runner for Experiments A (Normal), B (Adversarial Exfiltration), and C (Held-Out Unseen). | Evaluators can trigger any scenario with one click and observe live risk scoring and latency. |
+| **Intent & AgntID** | Intent vs Runtime Decision Comparison table and Gap Analysis panel. | Evaluates identical tool calls on config.env under approved rotation vs exfiltration intent; honest AgntID status. |

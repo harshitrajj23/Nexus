@@ -156,6 +156,28 @@ def test_experiment_unseen():
     print(f"Unseen attack experiment PASSED: steps={data['total_steps']}, policy_risk={summary['policy_risk_detected']}, evidence_score={summary['peak_evidence_score']}")
 
 
+def test_intent_boundary_experiment():
+    print("\n--- Testing POST /api/experiments/intent-boundary ---")
+    response = client.post("/api/experiments/intent-boundary")
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+    data = response.json()
+    assert data["status"] == "COMPLETED"
+    assert "conditions" in data
+    assert "comparison_matrix" in data
+    assert len(data["comparison_matrix"]) == 3
+    assert "approved_rotation" in data["conditions"]
+    assert "suspicious_exfiltration" in data["conditions"]
+    assert "context_conflict" in data["conditions"]
+
+    # Verify identical resource distinction:
+    # Rotation intent vs Exfiltration intent on credentials/config.env
+    cond_rot = data["conditions"]["approved_rotation"]
+    cond_exfil = data["conditions"]["suspicious_exfiltration"]
+    assert cond_rot["peak_evidence_score"] < cond_exfil["peak_evidence_score"]
+    assert cond_exfil["final_policy_risk"] in ["HighRisk", "Critical"]
+    print(f"Intent boundary experiment PASSED: Rotation Score={cond_rot['peak_evidence_score']}/100, Exfil Score={cond_exfil['peak_evidence_score']}/100")
+
+
 def test_graph_reset():
     print("\n--- Testing POST /api/graph/reset ---")
     response = client.post("/api/graph/reset")
@@ -188,6 +210,7 @@ def main():
         test_experiment_normal()
         test_experiment_adversarial()
         test_experiment_unseen()
+        test_intent_boundary_experiment()
         test_graph_reset()
 
     print("\n" + "=" * 70)

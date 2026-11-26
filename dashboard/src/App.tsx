@@ -5,6 +5,7 @@ import { LiveGraphView } from './components/LiveGraphView';
 import { ThreatIntelView } from './components/ThreatIntelView';
 import { ModelIntelView } from './components/ModelIntelView';
 import { ExperimentLabView } from './components/ExperimentLabView';
+import { IntentDecisionComparisonView } from './components/IntentDecisionComparisonView';
 import {
   getHealth,
   getGraphSnapshot,
@@ -150,6 +151,7 @@ export const App: React.FC = () => {
             onNavigateToGraph={() => setActiveTab('graph')}
             onNavigateToThreats={() => setActiveTab('threats')}
             onNavigateToLab={() => setActiveTab('lab')}
+            onNavigateToIntent={() => setActiveTab('intent')}
           />
         )}
 
@@ -177,6 +179,13 @@ export const App: React.FC = () => {
           <ExperimentLabView
             onExperimentComplete={handleExperimentComplete}
             onResetGraph={handleResetGraph}
+            onNavigateToGraph={() => setActiveTab('graph')}
+            onNavigateToThreats={() => setActiveTab('threats')}
+          />
+        )}
+
+        {activeTab === 'intent' && (
+          <IntentDecisionComparisonView
             onNavigateToGraph={() => setActiveTab('graph')}
             onNavigateToThreats={() => setActiveTab('threats')}
           />
