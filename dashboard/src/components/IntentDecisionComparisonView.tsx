@@ -126,7 +126,7 @@ export const IntentDecisionComparisonView: React.FC<IntentDecisionComparisonView
           <div className="flex items-center space-x-2">
             <SlidersHorizontal className="w-4 h-4 text-blue-400" />
             <h3 className="text-sm font-semibold text-white font-mono uppercase tracking-wider">
-              Intent vs Runtime Security Decision Matrix
+              Intent vs Runtime Decision
             </h3>
           </div>
           <span className="text-[11px] font-mono text-gray-500">
@@ -139,12 +139,12 @@ export const IntentDecisionComparisonView: React.FC<IntentDecisionComparisonView
             <thead className="bg-gray-900/90 text-gray-400 uppercase text-[10px] border-b border-gray-800">
               <tr>
                 <th className="py-3 px-3">Scenario</th>
-                <th className="py-3 px-3">Declared Task Intent</th>
-                <th className="py-3 px-3">Tool Action Sequence</th>
+                <th className="py-3 px-3">Intent</th>
+                <th className="py-3 px-3">Action</th>
                 <th className="py-3 px-3">NEXUS Policy</th>
                 <th className="py-3 px-3">AgntID Decision</th>
                 <th className="py-3 px-3">Enforcement</th>
-                <th className="py-3 px-3">Observable Finding</th>
+                <th className="py-3 px-3">Finding</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800 text-[11px]">
@@ -164,10 +164,10 @@ export const IntentDecisionComparisonView: React.FC<IntentDecisionComparisonView
                         {row.scenario}
                       </td>
                       <td className="py-3 px-3 text-gray-300 max-w-[220px] font-sans text-xs">
-                        &ldquo;{row.declared_intent}&rdquo;
+                        &ldquo;{row.intent || row.declared_intent}&rdquo;
                       </td>
-                      <td className="py-3 px-3 text-purple-300 font-semibold max-w-[190px]">
-                        {row.tool_action}
+                      <td className="py-3 px-3 text-purple-300 font-semibold max-w-[200px]">
+                        {row.action || row.tool_action}
                       </td>
                       <td className="py-3 px-3 whitespace-nowrap">
                         <div className="flex items-center space-x-1.5">

@@ -297,11 +297,16 @@ export interface ExperimentResponse {
 
 export interface IntentComparisonRow {
   scenario: string;
-  declared_intent: string;
-  tool_action: string;
+  intent?: string;
+  declared_intent?: string;
+  action?: string;
+  tool_action?: string;
   resource: string;
+  nexus_model_output?: string;
   nexus_policy: RiskLevel;
   nexus_score: number;
+  nexus_evidence_score?: number;
+  nexus_policy_recommendation?: string;
   agntid_decision: string;
   enforcement: string;
   finding: string;

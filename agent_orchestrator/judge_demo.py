@@ -256,15 +256,15 @@ All three benchmark scenarios were executed live through the native **C++17 LibT
 
 ---
 
-## 4. Intent-Boundary & Decision Comparison Matrix
+## 4. Intent vs Runtime Decision Matrix
 
 Identical sensitive resource (`credentials/config.env`) tested across distinct operational intents:
 
-| Scenario | Declared Task Intent | Tool Action | NEXUS Policy | AgntID Decision | Enforcement Status | Observable Finding |
+| Scenario | Intent | Action | NEXUS Policy | AgntID Decision | Enforcement | Finding |
 |---|---|---|:---:|:---:|:---:|---|
-| **Approved Rotation** | Validate credential file for rotation | `READ_SECRET -> config.env` | **{res_intent['comparison_matrix'][0]['nexus_policy']}** ({res_intent['comparison_matrix'][0]['nexus_score']}/100) | `{res_intent['comparison_matrix'][0]['agntid_decision']}` | {res_intent['comparison_matrix'][0]['enforcement']} | {res_intent['comparison_matrix'][0]['finding']} |
-| **Suspicious Exfil** | Read creds, escalate admin, exfiltrate | `READ_SECRET -> ESCALATE -> EXFIL` | **{res_intent['comparison_matrix'][1]['nexus_policy']}** ({res_intent['comparison_matrix'][1]['nexus_score']}/100) | `{res_intent['comparison_matrix'][1]['agntid_decision']}` | {res_intent['comparison_matrix'][1]['enforcement']} | {res_intent['comparison_matrix'][1]['finding']} |
-| **Context Conflict** | Process documentation updates | `READ_DOC -> READ_SECRET -> BEACON` | **{res_intent['comparison_matrix'][2]['nexus_policy']}** ({res_intent['comparison_matrix'][2]['nexus_score']}/100) | `{res_intent['comparison_matrix'][2]['agntid_decision']}` | {res_intent['comparison_matrix'][2]['enforcement']} | {res_intent['comparison_matrix'][2]['finding']} |
+| **{res_intent['comparison_matrix'][0]['scenario']}** | {res_intent['comparison_matrix'][0]['intent']} | `{res_intent['comparison_matrix'][0]['action']}` | **{res_intent['comparison_matrix'][0]['nexus_policy']}** ({res_intent['comparison_matrix'][0]['nexus_score']}/100) | `{res_intent['comparison_matrix'][0]['agntid_decision']}` | {res_intent['comparison_matrix'][0]['enforcement']} | {res_intent['comparison_matrix'][0]['finding']} |
+| **{res_intent['comparison_matrix'][1]['scenario']}** | {res_intent['comparison_matrix'][1]['intent']} | `{res_intent['comparison_matrix'][1]['action']}` | **{res_intent['comparison_matrix'][1]['nexus_policy']}** ({res_intent['comparison_matrix'][1]['nexus_score']}/100) | `{res_intent['comparison_matrix'][1]['agntid_decision']}` | {res_intent['comparison_matrix'][1]['enforcement']} | {res_intent['comparison_matrix'][1]['finding']} |
+| **{res_intent['comparison_matrix'][2]['scenario']}** | {res_intent['comparison_matrix'][2]['intent']} | `{res_intent['comparison_matrix'][2]['action']}` | **{res_intent['comparison_matrix'][2]['nexus_policy']}** ({res_intent['comparison_matrix'][2]['nexus_score']}/100) | `{res_intent['comparison_matrix'][2]['agntid_decision']}` | {res_intent['comparison_matrix'][2]['enforcement']} | {res_intent['comparison_matrix'][2]['finding']} |
 
 ---
 

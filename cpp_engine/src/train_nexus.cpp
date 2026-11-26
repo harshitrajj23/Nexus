@@ -12,7 +12,6 @@
 #include <iostream>
 #include <map>
 #include <numeric>
-#include <random>
 #include <string>
 #include <vector>
 #include <nlohmann/json.hpp>
@@ -299,27 +298,6 @@ int main(int argc, char* argv[]) {
     std::cout << "NEXUS C++17 LIBTORCH TRAINING, ABLATION & EVALUATION PIPELINE" << std::endl;
     std::cout << "==============================================================================" << std::endl;
 
-    int epochs = 120;
-    int patience = 24;
-    int64_t seed = 1337;
-    double learning_rate = 1e-3;
-
-    for (int i = 1; i < argc; ++i) {
-        const std::string arg = argv[i];
-        if (arg == "--epochs" && i + 1 < argc) {
-            epochs = std::max(1, std::stoi(argv[++i]));
-        } else if (arg == "--patience" && i + 1 < argc) {
-            patience = std::max(1, std::stoi(argv[++i]));
-        } else if (arg == "--seed" && i + 1 < argc) {
-            seed = std::stoll(argv[++i]);
-        } else if (arg == "--learning-rate" && i + 1 < argc) {
-            learning_rate = std::stod(argv[++i]);
-        }
-    }
-
-    torch::manual_seed(seed);
-    std::mt19937 rng(static_cast<std::mt19937::result_type>(seed));
-
     fs::path base_data_dir = "data";
     if (!fs::exists(base_data_dir / "train.jsonl")) {
         base_data_dir = "../data";
@@ -362,28 +340,22 @@ int main(int argc, char* argv[]) {
     // Training TemporalRiskModel (R-GCN + GRU)
     // -------------------------------------------------------------------------
     constexpr int64_t kHiddenDim = 32;
-    const int kEpochs = epochs;
+    constexpr int kEpochs = 10;
 
     std::cout << "\n[3/5] Training Full TemporalRiskModel (R-GCN + GRU) for " << kEpochs << " epochs..." << std::endl;
     TemporalRiskModel full_model(kNodeFeatureDim, kHiddenDim, kHiddenDim, /*num_rgcn_layers=*/2, /*num_gru_layers=*/1, /*dropout=*/0.1);
-    torch::optim::AdamW optimizer(full_model->parameters(), torch::optim::AdamWOptions(learning_rate).weight_decay(1e-4));
+    torch::optim::AdamW optimizer(full_model->parameters(), torch::optim::AdamWOptions(1e-3).weight_decay(1e-4));
 
     std::vector<double> train_losses;
     std::vector<double> val_losses;
     double best_val_f1 = -1.0;
-    int epochs_without_improvement = 0;
     fs::path best_model_path = base_data_dir / "nexus_best.pt";
 
     for (int epoch = 1; epoch <= kEpochs; ++epoch) {
         full_model->train();
         double epoch_train_loss = 0.0;
 
-        std::vector<size_t> train_indices(train_data.size());
-        std::iota(train_indices.begin(), train_indices.end(), 0);
-        std::shuffle(train_indices.begin(), train_indices.end(), rng);
-
-        for (const auto sample_index : train_indices) {
-            const auto& sample = train_data[sample_index];
+        for (const auto& sample : train_data) {
             optimizer.zero_grad();
             RiskPrediction pred = full_model->forward(sample.snapshots);
             torch::Tensor target = torch::tensor({sample.label}, torch::kInt64);
@@ -410,15 +382,6 @@ int main(int argc, char* argv[]) {
         if (val_report.macro_f1 > best_val_f1) {
             best_val_f1 = val_report.macro_f1;
             full_model->saveCheckpoint(best_model_path);
-            epochs_without_improvement = 0;
-        } else {
-            ++epochs_without_improvement;
-            if (epochs_without_improvement >= patience) {
-                std::cout << "      Early stopping after " << epoch
-                          << " epochs; validation Macro F1 did not improve for "
-                          << patience << " epochs." << std::endl;
-                break;
-            }
         }
     }
 
@@ -429,15 +392,11 @@ int main(int argc, char* argv[]) {
     // -------------------------------------------------------------------------
     std::cout << "\n[4/5] Training Ablation Baseline (Static R-GCN without GRU) on exact same splits..." << std::endl;
     AblationStaticRGCN ablation_model(kNodeFeatureDim, kHiddenDim, /*num_layers=*/2, /*dropout=*/0.1);
-    torch::optim::AdamW ablation_optimizer(ablation_model->parameters(), torch::optim::AdamWOptions(learning_rate).weight_decay(1e-4));
+    torch::optim::AdamW ablation_optimizer(ablation_model->parameters(), torch::optim::AdamWOptions(1e-3).weight_decay(1e-4));
 
     for (int epoch = 1; epoch <= kEpochs; ++epoch) {
         ablation_model->train();
-        std::vector<size_t> train_indices(train_data.size());
-        std::iota(train_indices.begin(), train_indices.end(), 0);
-        std::shuffle(train_indices.begin(), train_indices.end(), rng);
-        for (const auto sample_index : train_indices) {
-            const auto& sample = train_data[sample_index];
+        for (const auto& sample : train_data) {
             ablation_optimizer.zero_grad();
             torch::Tensor logits = ablation_model->forward(sample.snapshots);
             torch::Tensor target = torch::tensor({sample.label}, torch::kInt64);
@@ -460,14 +419,6 @@ int main(int argc, char* argv[]) {
 
     // Save metrics to data/metrics.json
     nlohmann::json metrics_json;
-    metrics_json["training_config"] = {
-        {"epochs_requested", epochs},
-        {"early_stopping_patience", patience},
-        {"seed", seed},
-        {"learning_rate", learning_rate},
-        {"selection_metric", "validation_macro_f1"},
-        {"training_order", "seeded_shuffle_per_epoch"}
-    };
     metrics_json["train_loss_history"] = train_losses;
     metrics_json["val_loss_history"] = val_losses;
     metrics_json["temporal_model_test"] = {
