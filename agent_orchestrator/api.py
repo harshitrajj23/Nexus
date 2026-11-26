@@ -98,6 +98,7 @@ class ExperimentRunRequest(BaseModel):
     scenario: str = Field(..., description="Scenario to execute: 'normal', 'adversarial_exfil', or 'unseen_attack'")
     agent_id: Optional[str] = Field(default=None, description="Optional custom agent identifier")
     reset_graph_before: bool = Field(default=True, description="Reset graph state prior to execution")
+    base_timestamp: Optional[int] = Field(default=1795330500, description="Deterministic base timestamp for reproducible scenario replays")
 
 
 # -----------------------------------------------------------------------------
@@ -290,8 +291,8 @@ def run_experiment(req: ExperimentRunRequest) -> Dict[str, Any]:
     agent_id = req.agent_id or f"agent_exp_{req.scenario}"
     sandboxed_agent = SandboxedAgent(agent_id=agent_id)
 
-    # Execute scenario steps in isolated sandbox
-    scenario_steps = sandboxed_agent.run_scenario(req.scenario)
+    # Execute scenario steps in isolated sandbox with deterministic base_timestamp
+    scenario_steps = sandboxed_agent.run_scenario(req.scenario, base_timestamp=req.base_timestamp)
 
     processed_events = []
     risk_rank = {"Normal": 0, "Suspicious": 1, "HighRisk": 2, "Critical": 3}

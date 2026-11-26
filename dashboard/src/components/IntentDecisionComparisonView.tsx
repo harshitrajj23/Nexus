@@ -269,8 +269,8 @@ export const IntentDecisionComparisonView: React.FC<IntentDecisionComparisonView
                 <span className="text-cyan-400 font-bold uppercase text-[11px]">
                   1. Neural Signal
                 </span>
-                <span className="text-white font-bold">
-                  {c3Final.nexus_model_output} ({(c3Final.nexus_model_confidence * 100).toFixed(1)}%)
+                <span className="text-[10px] text-gray-500">
+                  Raw 4-class softmax probabilities
                 </span>
               </div>
               <div className="grid grid-cols-4 gap-1.5 text-[10px]">
@@ -280,14 +280,14 @@ export const IntentDecisionComparisonView: React.FC<IntentDecisionComparisonView
                     <div key={cls} className="bg-gray-950 p-1.5 rounded border border-gray-800 text-center">
                       <span className="text-gray-500 block">{cls}</span>
                       <span className="text-gray-200 font-bold">
-                        {typeof p === 'number' ? `${(p * 100).toFixed(1)}%` : '—'}
+                        {typeof p === 'number' ? p.toFixed(4) : '—'}
                       </span>
                     </div>
                   );
                 })}
               </div>
               <p className="text-[11px] text-gray-400 font-sans">
-                Neural probabilities are near-uniform (37–42%); deterministic evidence score drives policy decisions.
+                Model output is near-uniform in this build; the evidence score drives policy decisions.
               </p>
             </div>
 

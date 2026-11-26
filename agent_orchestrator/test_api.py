@@ -133,9 +133,9 @@ def test_experiment_adversarial():
     assert len(data["steps"]) == 4
 
     summary = data["summary"]
-    # Adversarial exfil accesses config.env (+25), admin (+25), exfil (+35), full chain (+10), neural (+10) => Score >= 95
-    assert summary["policy_risk_detected"] in ["HighRisk", "Critical"], f"Expected HighRisk or Critical, got {summary['policy_risk_detected']}"
-    assert summary["peak_evidence_score"] >= 75, f"Expected evidence score >= 75 for exfil, got {summary['peak_evidence_score']}"
+    # Adversarial exfil accesses config.env (+25), admin (+25), exfil (+35), full chain (+10), neural (+10) => Score == 100
+    assert summary["policy_risk_detected"] == "Critical", f"Expected Critical, got {summary['policy_risk_detected']}"
+    assert summary["peak_evidence_score"] == 100, f"Expected peak_evidence_score == 100 for exfil, got {summary['peak_evidence_score']}"
     assert "attack_explanation" in summary and summary["attack_explanation"] is not None
     assert summary["attack_explanation"]["sensitive_resource"] == "credentials/config.env"
     assert summary["attack_explanation"]["privilege_or_role"] == "ADMIN"
