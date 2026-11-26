@@ -41,7 +41,8 @@ def run_intent_condition(
     steps_spec: List[Dict[str, Any]],
     cpp_engine: NexusCppBridge,
     hybrid_engine: HybridRiskEngine,
-    agent: SandboxedAgent
+    agent: SandboxedAgent,
+    base_timestamp: Optional[int] = None
 ) -> Dict[str, Any]:
     """Runs a single intent scenario condition and gathers structured telemetry."""
     cpp_engine.reset()
@@ -55,6 +56,7 @@ def run_intent_condition(
         permission = spec["permission"]
         executor = spec["executor"]
         label = spec.get("label", "Normal")
+        step_ts = (base_timestamp + (idx - 1) * 10) if base_timestamp is not None else None
 
         # Execute in sandbox and evaluate with AgntID adapter passing declared intent
         step_exec = agent.run_step(
@@ -64,7 +66,8 @@ def run_intent_condition(
             permission=permission,
             executor_func=executor,
             intent_id=declared_intent,
-            label=label
+            label=label,
+            timestamp=step_ts
         )
 
         evt = step_exec["event"]
@@ -86,6 +89,7 @@ def run_intent_condition(
 
         recorded_steps.append({
             "step_index": idx,
+            "timestamp": evt["timestamp"],
             "tool": tool,
             "action": action,
             "resource": resource,
@@ -93,12 +97,15 @@ def run_intent_condition(
             "declared_intent": declared_intent,
             "nexus_model_output": pred["class_name"],
             "nexus_model_confidence": pred["confidence"],
+            "nexus_model_probabilities": pred.get("probabilities", []),
             "nexus_evidence_score": hybrid_step["evidence_score"],
+            "evidence_signals": hybrid_step.get("evidence_signals", []),
             "nexus_policy_recommendation": hybrid_step["recommended_action"],
             "nexus_policy_risk": hybrid_step["policy_risk"],
             "agntid_decision": agnt.get("decision", "NOT_EVALUATED"),
             "agntid_source": agnt.get("source", "unavailable"),
             "agntid_available": agnt.get("agntid_available", False),
+            "agntid_reason": agnt.get("reason", ""),
             "actual_enforcement": "Enforced (Blocked)" if agnt.get("enforced", False) else "Advisory only (Not blocked)",
             "action_blocked": agnt.get("action_blocked", False),
             "attack_paths_count": len(cpp_res.get("attack_paths", [])),
@@ -114,9 +121,11 @@ def run_intent_condition(
         "total_steps": len(steps_spec),
         "steps": recorded_steps,
         "peak_evidence_score": peak_score,
+        "final_evidence_signals": final_step["evidence_signals"],
         "final_policy_risk": final_step["nexus_policy_risk"],
         "final_recommendation": final_step["nexus_policy_recommendation"],
         "final_agntid_decision": final_step["agntid_decision"],
+        "final_agntid_reason": final_step["agntid_reason"],
         "actual_enforcement": final_step["actual_enforcement"]
     }
 
@@ -163,11 +172,13 @@ def analyze_agreement(condition_id: str, result: Dict[str, Any]) -> Dict[str, st
 
 def run_intent_boundary_experiment(
     cpp_engine: Optional[NexusCppBridge] = None,
-    hybrid_engine: Optional[HybridRiskEngine] = None
+    hybrid_engine: Optional[HybridRiskEngine] = None,
+    base_timestamp: int = 1795330500
 ) -> Dict[str, Any]:
     """
     Executes the full Intent-Boundary Experiment across the 3 test conditions.
-    Can be called directly from CLI, FastAPI endpoint, or demo runner.
+    Uses deterministic base_timestamp (default: 1795330500) so scenario replays
+    remain reproducible across wall-clock hours.
     """
     owns_cpp = False
     if cpp_engine is None:
@@ -218,7 +229,7 @@ def run_intent_boundary_experiment(
                 "label": "Normal"
             }
         ]
-        res_a = run_intent_condition("approved_rotation", intent_a, spec_a, cpp_engine, hybrid_engine, agent)
+        res_a = run_intent_condition("approved_rotation", intent_a, spec_a, cpp_engine, hybrid_engine, agent, base_timestamp=base_timestamp)
         res_a["analysis"] = analyze_agreement("approved_rotation", res_a)
 
         # =====================================================================
@@ -259,7 +270,7 @@ def run_intent_boundary_experiment(
                 "label": "Suspicious"
             }
         ]
-        res_b = run_intent_condition("intent_mismatch", intent_b, spec_b, cpp_engine, hybrid_engine, agent)
+        res_b = run_intent_condition("intent_mismatch", intent_b, spec_b, cpp_engine, hybrid_engine, agent, base_timestamp=base_timestamp)
         res_b["analysis"] = analyze_agreement("intent_mismatch", res_b)
 
         # =====================================================================
@@ -292,7 +303,7 @@ def run_intent_boundary_experiment(
                 "label": "Critical"
             }
         ]
-        res_c = run_intent_condition("multi_step_exfiltration", intent_c, spec_c, cpp_engine, hybrid_engine, agent)
+        res_c = run_intent_condition("multi_step_exfiltration", intent_c, spec_c, cpp_engine, hybrid_engine, agent, base_timestamp=base_timestamp)
         res_c["analysis"] = analyze_agreement("multi_step_exfiltration", res_c)
 
         # Compile comparison matrix matching exact challenge requirement

@@ -277,7 +277,7 @@ npm run dev
 | Experiment | Description | Expected Outcome | Output Artifact |
 |------------|-------------|------------------|-----------------|
 | **Experiment A (Normal Behaviour)** | Benign repository inspection, SQL database query, quarterly report generation, and unit tests. | Normal graph evolution, benign telemetry, zero unauthorized external operations. | `data/demo_runs/experiment_a_normal.json` |
-| **Experiment B (Multi-Step Attack)** | Recon pivoting to secret access (`config.env`), role escalation (`ADMIN`), and unauthorized external exfiltration. | Reconstructs 5 multi-hop causal attack paths, identifies compromised agent, records independent AgntID evaluation. | `data/demo_runs/experiment_b_adversarial.json` |
+| **Experiment B (Multi-Step Attack)** | Recon pivoting to secret access (`config.env`), role escalation (`ADMIN`), and unauthorized external exfiltration. | Reconstructs multi-hop graph trails, identifies compromised agent and causal chain, records independent AgntID evaluation. | `data/demo_runs/experiment_b_adversarial.json` |
 | **Experiment C (Held-Out Unseen Attack)** | Out-of-distribution generalization against withheld indirect prompt injection and cloud IMDS metadata pivot. | Successfully processes unseen attack template from `test_unseen.jsonl`, reconstructing causal vector. | `data/demo_runs/experiment_c_unseen.json` |
 
 ---

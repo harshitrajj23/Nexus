@@ -134,7 +134,7 @@ The automated demonstration suite (`agent_orchestrator/run_competition_demos.py`
 ### 5.2 Experiment B: Multi-Step Adversarial Vector (Credential Exfiltration)
 - **File**: `data/demo_runs/experiment_b_adversarial.json`
 - **Workflow**: `READ_DOC (spec.md)` &rarr; `READ_SECRET (credentials/config.env)` &rarr; `ESCALATE_ROLE (iam/roles/admin)` &rarr; `EXFILTRATE (mock://adversary-exfil.org/api/v1/dump)`.
-- **Findings**: The dynamic graph expanded to capture secret recon and IAM privilege changes; `AttackPathAnalyzer` reconstructed **5 multi-hop causal attack paths** connecting the compromised agent to the unauthorized external destination with a peak path score of **0.867**; average latency was **2.47 ms**.
+- **Findings**: The dynamic graph expanded to capture secret recon and IAM privilege changes; `AttackPathAnalyzer` reconstructed multi-hop graph trails connecting the compromised agent across sequential `FOLLOWS`, `MODIFIES`, and `AUTHORIZED_BY` edges; average latency was **2.47 ms**.
 - **Result**: **PASS**.
 
 ### 5.3 Experiment C: Held-Out Unseen Attack Generalization

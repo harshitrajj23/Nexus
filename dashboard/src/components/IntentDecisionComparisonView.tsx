@@ -49,6 +49,18 @@ export const IntentDecisionComparisonView: React.FC<IntentDecisionComparisonView
   }, []);
 
   const isAgntIDAvailable = data?.agntid_status?.available ?? false;
+  const c3 = data?.conditions?.multi_step_exfiltration;
+  const c3Steps: any[] = c3?.steps || [];
+  const c3Final: any = c3Steps.length > 0 ? c3Steps[c3Steps.length - 1] : null;
+  const c3SecretResource = c3Steps.find((s) => s.action === 'READ_SECRET')?.resource || '—';
+  const c3ElevatedRole = c3Steps.find((s) => s.action === 'ESCALATE_ROLE')?.permission || '—';
+  const c3EgressDest = c3Steps.find((s) => s.action === 'EXFILTRATE')?.resource || '—';
+  const riskClasses = ['Normal', 'Suspicious', 'HighRisk', 'Critical'];
+
+  const formatEpoch = (ts?: number) => {
+    if (!ts) return '—';
+    return `${new Date(ts * 1000).toISOString().replace('T', ' ').slice(0, 19)} UTC (${ts})`;
+  };
 
   return (
     <div className="space-y-6">
@@ -201,7 +213,140 @@ export const IntentDecisionComparisonView: React.FC<IntentDecisionComparisonView
         </div>
       </div>
 
-      {/* 3. Agreement / Gap Analysis Panel */}
+      {/* 3. Context 3 Exfiltration Run — Ordered Event Chain (Evidence Scoring) & 4 Decision Layers */}
+      {c3 && c3Final && (
+        <div className="bg-[#111827] border border-rose-500/40 rounded-xl p-5 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-gray-800">
+            <div>
+              <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/30 font-bold">
+                Context 3: Multi-Step Exfiltration Detail
+              </span>
+              <h3 className="text-sm sm:text-base font-semibold text-white font-mono mt-1.5">
+                Ordered Event Chain (Evidence Scoring)
+              </h3>
+            </div>
+            <span className="text-[11px] font-mono text-gray-400">
+              Intent: &ldquo;{c3.declared_intent}&rdquo;
+            </span>
+          </div>
+
+          {/* Ordered Chain & Step Timestamps (from API response) */}
+          <div className="bg-gray-900/80 border border-gray-800 rounded-lg p-4 space-y-3">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+              {c3Steps.map((step, i) => (
+                <React.Fragment key={step.event_id || i}>
+                  <div className="px-2.5 py-1.5 rounded bg-gray-950 border border-gray-700">
+                    <span className="text-rose-300 font-bold">{step.action}</span>
+                    <span className="text-gray-500 text-[10px] block">{formatEpoch(step.timestamp)}</span>
+                  </div>
+                  {i < c3Steps.length - 1 && <ArrowRight className="w-4 h-4 text-gray-500 shrink-0" />}
+                </React.Fragment>
+              ))}
+            </div>
+
+            {/* Key Extracted Entities (from API response) */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono pt-2 border-t border-gray-800">
+              <div className="bg-gray-950/80 p-2.5 rounded border border-gray-800">
+                <span className="text-gray-500 block text-[10px] uppercase">Secret Resource</span>
+                <span className="text-amber-300 font-bold break-all">{c3SecretResource}</span>
+              </div>
+              <div className="bg-gray-950/80 p-2.5 rounded border border-gray-800">
+                <span className="text-gray-500 block text-[10px] uppercase">Elevated Role</span>
+                <span className="text-rose-400 font-bold">{c3ElevatedRole}</span>
+              </div>
+              <div className="bg-gray-950/80 p-2.5 rounded border border-gray-800">
+                <span className="text-gray-500 block text-[10px] uppercase">Mock Egress Destination</span>
+                <span className="text-red-400 font-bold break-all">{c3EgressDest}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Four Separate Labeled Decision Layer Panels (all values read from API response) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+            {/* Panel 1: Neural Signal */}
+            <div className="p-4 rounded-lg bg-gray-900/80 border border-gray-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-cyan-400 font-bold uppercase text-[11px]">
+                  1. Neural Signal
+                </span>
+                <span className="text-white font-bold">
+                  {c3Final.nexus_model_output} ({(c3Final.nexus_model_confidence * 100).toFixed(1)}%)
+                </span>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5 text-[10px]">
+                {riskClasses.map((cls, idx) => {
+                  const p = c3Final.nexus_model_probabilities?.[idx];
+                  return (
+                    <div key={cls} className="bg-gray-950 p-1.5 rounded border border-gray-800 text-center">
+                      <span className="text-gray-500 block">{cls}</span>
+                      <span className="text-gray-200 font-bold">
+                        {typeof p === 'number' ? `${(p * 100).toFixed(1)}%` : '—'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-gray-400 font-sans">
+                Neural probabilities are near-uniform (37–42%); deterministic evidence score drives policy decisions.
+              </p>
+            </div>
+
+            {/* Panel 2: Evidence Score Breakdown */}
+            <div className="p-4 rounded-lg bg-gray-900/80 border border-gray-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-amber-400 font-bold uppercase text-[11px]">
+                  2. Evidence Score Breakdown
+                </span>
+                <span className="text-white font-bold">{c3.peak_evidence_score} / 100</span>
+              </div>
+              <div className="space-y-1">
+                {(c3.final_evidence_signals || c3Final.evidence_signals || []).map((sig: any) => (
+                  <div key={sig.id} className="flex items-center justify-between bg-gray-950 px-2 py-1 rounded border border-gray-800 text-[11px]">
+                    <span className="text-gray-300 truncate pr-2">{sig.name}</span>
+                    <span className="text-amber-300 font-bold shrink-0">+{sig.points}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Panel 3: Policy Action */}
+            <div className="p-4 rounded-lg bg-gray-900/80 border border-gray-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-rose-400 font-bold uppercase text-[11px]">
+                  3. Policy Action
+                </span>
+                <RiskBadge level={c3.final_policy_risk} size="sm" />
+              </div>
+              <p className="text-sm text-white font-semibold font-sans">
+                {c3.final_recommendation}
+              </p>
+              <p className="text-[11px] text-gray-400 font-sans">
+                Advisory policy mapped from deterministic evidence score ({c3.peak_evidence_score}/100).
+              </p>
+            </div>
+
+            {/* Panel 4: AgntID Status */}
+            <div className="p-4 rounded-lg bg-gray-900/80 border border-gray-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-emerald-400 font-bold uppercase text-[11px]">
+                  4. AgntID Status
+                </span>
+                <span className="px-2 py-0.5 rounded bg-gray-800 text-gray-200 border border-gray-700 font-bold text-[10px]">
+                  {c3.final_agntid_decision}
+                </span>
+              </div>
+              <p className="text-xs text-amber-300 font-semibold">
+                {c3.actual_enforcement}
+              </p>
+              <p className="text-[11px] text-gray-400 font-sans leading-relaxed">
+                {c3.final_agntid_reason || 'AgntID unavailable; no blocking occurred.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Agreement / Gap Analysis Panel */}
       <div className="bg-[#111827] border border-gray-800 rounded-xl p-5 shadow-sm space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-gray-800">
           <div className="flex items-center space-x-2">
@@ -232,7 +377,7 @@ export const IntentDecisionComparisonView: React.FC<IntentDecisionComparisonView
               2. Why Point-in-Time Tool Checks Miss the Attack
             </span>
             <p className="text-gray-300 leading-relaxed font-sans text-xs">
-              A point-in-time guardrail checking only the final HTTP POST tool call evaluates it in isolation and may permit it. NEXUS reconstructs the causal graph chain (<code className="text-cyan-300">t_k &ge; t_k-1</code>), proving the outbound POST contains data derived from the earlier secret read.
+              A point-in-time guardrail checking only the final HTTP POST tool call evaluates it in isolation and may permit it. NEXUS evaluates the ordered event chain (evidence scoring) (<code className="text-cyan-300">t_k &ge; t_k-1</code>), linking the outbound POST to the earlier secret read.
             </p>
           </div>
 

@@ -109,12 +109,20 @@ class NexusCppBridge:
         })
 
     def close(self) -> None:
-        """Terminates the C++ bridge subprocess."""
+        """Terminates the C++ bridge subprocess and closes stdio pipes."""
         with self._lock:
-            if self._process and self._process.poll() is None:
-                self._process.terminate()
-                try:
-                    self._process.wait(timeout=2.0)
-                except subprocess.TimeoutExpired:
-                    self._process.kill()
+            if self._process:
+                if self._process.poll() is None:
+                    self._process.terminate()
+                    try:
+                        self._process.wait(timeout=2.0)
+                    except subprocess.TimeoutExpired:
+                        self._process.kill()
+                        self._process.wait(timeout=1.0)
+                for pipe in (self._process.stdin, self._process.stdout, self._process.stderr):
+                    if pipe is not None:
+                        try:
+                            pipe.close()
+                        except Exception:
+                            pass
             self._process = None
