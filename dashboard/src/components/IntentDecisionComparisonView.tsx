@@ -98,17 +98,17 @@ export const IntentDecisionComparisonView: React.FC<IntentDecisionComparisonView
               <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
               <div>
                 <span className="font-bold text-amber-300 block">
-                  Connect AgntID to run live runtime decision experiments
+                  AgntID adapter scaffold is present; official runtime validation is pending credentials and documented API contract.
                 </span>
                 <p className="mt-0.5 text-[11px] text-amber-200/90 leading-relaxed font-sans">
-                  Official AgntID runtime SDK/CLI is unconfigured in this host environment. In accordance with strict hackathon scientific integrity rules, AgntID decisions are recorded honestly as <code className="text-amber-300 bg-amber-950/60 px-1 py-0.5 rounded">NOT_EVALUATED</code> without fabricating simulated blocks. NEXUS operates in transparent advisory mode.
+                  Official AgntID runtime SDK/CLI is unconfigured in this host environment. In accordance with strict hackathon scientific integrity rules, AgntID decisions are recorded honestly as <code className="text-amber-300 bg-amber-950/60 px-1 py-0.5 rounded">NOT_EVALUATED</code>. All current decisions in local demos are NEXUS decisions, not AgntID decisions. NEXUS policy is advisory when AgntID is unavailable, and mock external egress is simulated locally and performs no real network transfer.
                 </p>
               </div>
             </div>
           ) : (
             <div className="p-3 rounded-lg bg-emerald-950/30 border border-emerald-500/40 text-emerald-200 text-xs font-mono flex items-center space-x-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>Official AgntID Adapter Connected: {data?.agntid_status?.source}</span>
+              <span>AgntID Verified Live Integration Active: {data?.agntid_status?.source}</span>
             </div>
           )}
         </div>
@@ -252,7 +252,7 @@ export const IntentDecisionComparisonView: React.FC<IntentDecisionComparisonView
               4. Runtime Enforcement Separation
             </span>
             <p className="text-gray-300 leading-relaxed font-sans text-xs">
-              NEXUS maintains strict integrity: AgntID is reported honestly as <strong>NOT_EVALUATED</strong> when unconfigured. NEXUS policy recommendations advise human analysts and external gateways rather than fabricating automated blocking claims.
+              All current decisions in local demos are NEXUS decisions, not AgntID decisions. NEXUS policy is advisory when AgntID is unavailable, and mock external egress is simulated locally and performs no real network transfer. AgntID adapter scaffold is present; official runtime validation is pending credentials and documented API contract.
             </p>
           </div>
         </div>

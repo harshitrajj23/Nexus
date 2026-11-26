@@ -42,6 +42,10 @@ In accordance with strict competition integrity standards, this report provides 
    Because real-world autonomous agent enterprise attack datasets are proprietary or hazardous to execute on live networks, evaluation benchmarks were generated via a scenario-based generator (`agent_orchestrator/generate_dataset.py`). All benchmark records are explicitly flagged with `is_synthetic: true`. Live executions inside the sandboxed testbed are explicitly flagged with `is_synthetic: false`.
 3. **Transparent AgntID Status**:
    Local inspection of system PATH, Python virtualenv packages, and environment variables confirmed that no official AgntID SDK or daemon was installed. NEXUS records AgntID runtime status honestly as `"NOT_EVALUATED"`, with `enforced: false`. **No fake enforcement blocks or fabricated decisions were claimed.**
+   - **AgntID adapter scaffold is present; official runtime validation is pending credentials and documented API contract.**
+   - **NEXUS policy is advisory when AgntID is unavailable.**
+   - **All current decisions in local demos are NEXUS decisions, not AgntID decisions.**
+   - **Mock external egress is simulated locally and performs no real network transfer.**
 4. **Rigorous Ablation Reporting**:
    Metrics are extracted directly from `data/metrics.json` without selective omission. The model's baseline challenges (e.g. class imbalance sensitivity and high false-positive rates on seen test splits) are thoroughly diagnosed rather than concealed.
 

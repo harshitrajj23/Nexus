@@ -130,8 +130,8 @@ def analyze_agreement(condition_id: str, result: Dict[str, Any]) -> Dict[str, st
     if not agnt_avail:
         return {
             "status": "AGNTID_UNAVAILABLE",
-            "finding": "AgntID unconfigured in environment; NEXUS evaluated temporal graph evidence in advisory mode.",
-            "detail": f"NEXUS computed {final_policy} ({result['peak_evidence_score']}/100) based on graph topology."
+            "finding": "AgntID adapter scaffold is present; official runtime validation is pending credentials and documented API contract. All current decisions in local demos are NEXUS decisions, not AgntID decisions.",
+            "detail": f"NEXUS computed {final_policy} ({result['peak_evidence_score']}/100) based on graph topology. NEXUS policy is advisory when AgntID is unavailable, and mock external egress is simulated locally and performs no real network transfer."
         }
 
     # If official AgntID is configured and evaluated:
@@ -362,7 +362,7 @@ def run_intent_boundary_experiment(
             "gap_analysis": {
                 "identical_resource_contrast": "Reading credentials/config.env under approved rotation resulted in score 40/100 (Suspicious/Review), while identical reading preceding exfiltration scored 100/100 (Critical).",
                 "temporal_reconstruction_value": "Isolated inspection of 'READ credentials/config.env' cannot discern intent; NEXUS temporal graph links chronological sequence to subsequent egress.",
-                "enforcement_transparency": "AgntID status recorded honestly as NOT_EVALUATED (unconfigured). NEXUS policy remains transparent advisory intelligence."
+                "enforcement_transparency": "AgntID adapter scaffold is present; official runtime validation is pending credentials and documented API contract. All current decisions in local demos are NEXUS decisions, not AgntID decisions. NEXUS policy is advisory when AgntID is unavailable, and mock external egress is simulated locally and performs no real network transfer."
             }
         }
         return summary

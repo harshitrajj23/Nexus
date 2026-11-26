@@ -162,6 +162,7 @@ class SandboxedAgent:
     def tool_network_request(self, mock_url: str, method: str = "GET", payload: Optional[Dict] = None) -> Dict[str, Any]:
         """
         Simulated network request to mock endpoints.
+        Mock external egress is simulated locally and performs no real network transfer.
         Strictly blocks any real network communication.
         """
         if not mock_url.startswith("mock://") and not mock_url.startswith("http://127.0.0.1:"):
@@ -173,6 +174,8 @@ class SandboxedAgent:
             "success": True,
             "mock_url": mock_url,
             "status_code": 200,
+            "simulated_egress": True,
+            "notice": "Mock external egress is simulated locally and performs no real network transfer.",
             "response": {"received": True, "endpoint": mock_url}
         }
 

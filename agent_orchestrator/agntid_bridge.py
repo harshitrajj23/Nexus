@@ -72,7 +72,14 @@ def inspect_agntid_environment() -> Dict[str, Any]:
     else:
         findings["notes"].append("No AGNTID_URL or AGNTID_ENDPOINT environment variable configured.")
 
-    findings["enforcement_active"] = findings["sdk_installed"] or findings["cli_available"] or findings["endpoint_configured"]
+    # Enforcement is strictly False unless official live interception gateway is verified
+    findings["enforcement_active"] = False
+    findings["truthful_notice"] = (
+        "AgntID adapter scaffold is present; official runtime validation is pending credentials and documented API contract. "
+        "NEXUS policy is advisory when AgntID is unavailable. "
+        "All current decisions in local demos are NEXUS decisions, not AgntID decisions. "
+        "Mock external egress is simulated locally and performs no real network transfer."
+    )
     return findings
 
 

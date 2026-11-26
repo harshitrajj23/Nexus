@@ -337,8 +337,12 @@ In accordance with strict competition evaluation and scientific integrity princi
 3. **Synthetic Telemetry Transparency**:
    Benchmark training and validation splits were generated synthetically (`agent_orchestrator/generate_dataset.py`) to safely model hazardous agent exploits (credential theft, cloud metadata queries). All benchmark records are explicitly flagged with `is_synthetic: true`. Live executions inside `agent_runner.py` are explicitly flagged with `is_synthetic: false`.
 
-4. **Honest AgntID Evaluation**:
-   System checks confirm that no official AgntID SDK or daemon is currently installed in the host environment. Decisions are recorded independently as `NOT_EVALUATED` (`enforced: false`). **No fake enforcement claims or fabricated blocks are reported.**
+4. **Honest AgntID Evaluation & Status**:
+   - **AgntID adapter scaffold is present; official runtime validation is pending credentials and documented API contract.**
+   - **NEXUS policy is advisory when AgntID is unavailable.**
+   - **All current decisions in local demos are NEXUS decisions, not AgntID decisions.**
+   - **Mock external egress is simulated locally and performs no real network transfer.**
+   - System checks confirm that no official AgntID SDK or daemon is currently installed in the host environment. Decisions are recorded independently as `NOT_EVALUATED` (`enforced: false`). **No fake enforcement claims or fabricated blocks are reported.**
 
 ---
 

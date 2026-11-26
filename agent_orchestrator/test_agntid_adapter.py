@@ -19,7 +19,9 @@ if str(REPO_ROOT) not in sys.path:
 
 from agent_orchestrator.agntid_adapter import (
     BaseAgntIDAdapter,
+    IntegrationStatus,
     UnconfiguredAgntIDAdapter,
+    ConfiguredUnverifiedAgntIDAdapter,
     OfficialSDKAgntIDAdapter,
     OfficialCLIAgntIDAdapter,
     OfficialAPIAgntIDAdapter,
@@ -43,6 +45,7 @@ class TestAgntIDAdapter(unittest.TestCase):
     def test_unconfigured_adapter_contract(self):
         adapter = UnconfiguredAgntIDAdapter()
         self.assertFalse(adapter.is_available())
+        self.assertEqual(adapter.get_status(), IntegrationStatus.UNAVAILABLE)
         self.assertEqual(adapter.get_source(), "unavailable")
 
         res = adapter.evaluate(self.sample_event, intent_context="Validate credential rotation")
@@ -50,10 +53,20 @@ class TestAgntIDAdapter(unittest.TestCase):
         self.assertEqual(res["decision"], "NOT_EVALUATED")
         self.assertFalse(res["action_blocked"])
         self.assertFalse(res["enforced"])
-        self.assertIn("Official AgntID runtime SDK/CLI not configured", res["reason"])
+        self.assertIn("AgntID adapter scaffold is present", res["reason"])
         self.assertEqual(res["intent_context"], "Validate credential rotation")
         self.assertEqual(res["event_id"], "EVT_TEST_001")
         self.assertIsNone(res["raw_response"])
+
+    def test_configured_unverified_adapter_refuses_guesswork(self):
+        adapter = ConfiguredUnverifiedAgntIDAdapter("https://unverified.endpoint.local")
+        self.assertEqual(adapter.get_status(), IntegrationStatus.CONFIGURED_BUT_UNVERIFIED)
+        self.assertFalse(adapter.is_verified_live())
+
+        res = adapter.evaluate(self.sample_event)
+        self.assertEqual(res["decision"], "NOT_EVALUATED")
+        self.assertFalse(res["enforced"])
+        self.assertIn("Refusing to make unverified assumptions", res["reason"])
 
     def test_mock_sdk_adapter_allow(self):
         mock_sdk = MagicMock()
