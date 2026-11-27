@@ -1,7 +1,7 @@
 # NEXUS: Temporal Graph Neural Network for Autonomous AI Agent Security
 ## Official Competition Submission & Technical Verification Report
 
-**Author / Submitter:** Harshit Raj Singh  
+**Author / Submitter:** Harshit Raj  
 **Track:** AI Agent Security & Runtime Threat Intelligence  
 **Repository:** [https://github.com/harshitrajj23/Nexus.git](https://github.com/harshitrajj23/Nexus.git)  
 **Date:** November 27, 2026 (Day 7 Submission Milestone)  

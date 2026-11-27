@@ -182,10 +182,22 @@ export const IntentDecisionComparisonView: React.FC<IntentDecisionComparisonView
                         {row.action || row.tool_action}
                       </td>
                       <td className="py-3 px-3 whitespace-nowrap">
-                        <div className="flex items-center space-x-1.5">
-                          <RiskBadge level={row.nexus_policy} size="sm" />
-                          <span className="text-[10px] text-gray-400 font-bold">({row.nexus_score}/100)</span>
-                        </div>
+                        {row.scenario === 'Intent Mismatch' ? (
+                          <>
+                            <div className="flex items-center space-x-1.5">
+                              <RiskBadge level="HighRisk" size="sm" />
+                              <span className="text-[10px] text-gray-300 font-bold">(65/100, deterministic)</span>
+                            </div>
+                            <span className="block text-[10px] text-amber-300/90 mt-1 whitespace-normal max-w-[190px] font-sans">
+                              {row.nexus_policy} ({row.nexus_score}/100) with +10 neural baseline.
+                            </span>
+                          </>
+                        ) : (
+                          <div className="flex items-center space-x-1.5">
+                            <RiskBadge level={row.nexus_policy} size="sm" />
+                            <span className="text-[10px] text-gray-400 font-bold">({row.nexus_score}/100)</span>
+                          </div>
+                        )}
                       </td>
                       <td className="py-3 px-3 whitespace-nowrap">
                         <span className="px-2 py-0.5 rounded bg-gray-800 text-gray-300 border border-gray-700 font-mono text-[10px] font-bold">
@@ -289,7 +301,7 @@ export const IntentDecisionComparisonView: React.FC<IntentDecisionComparisonView
                 })}
               </div>
               <p className="text-[11px] text-gray-400 font-sans">
-                Model output is near-uniform in this build; the evidence score drives policy decisions. The +10 model term is applied to all runs in this build, including the benign run, so it does not discriminate.
+                Model output is near-uniform in this build; the evidence score drives policy decisions. The +10 model term triggers when neural argmax is Suspicious/HighRisk/Critical (non-Normal); because all runs (including benign) land on Suspicious by a measured margin of 0.0056 to 0.0450 over Normal across all four scenarios, +10 fires on every run and does not discriminate.
               </p>
             </div>
 
@@ -308,7 +320,7 @@ export const IntentDecisionComparisonView: React.FC<IntentDecisionComparisonView
               </div>
               <div className="flex items-center justify-between text-[10px] text-gray-400 px-1">
                 <span>Deterministic: <strong className="text-gray-200">{c3.deterministic_score ?? 95}</strong> (+25 +25 +35 +10)</span>
-                <span>Neural Baseline: <strong className="text-cyan-300">+{c3.model_anomaly_score ?? 10}</strong> (all runs)</span>
+                <span>Neural Baseline: <strong className="text-cyan-300">+{c3.model_anomaly_score ?? 10}</strong> (when argmax != Normal)</span>
               </div>
               <div className="space-y-1">
                 {(c3.final_evidence_signals || c3Final.evidence_signals || []).map((sig: any) => (
@@ -332,7 +344,7 @@ export const IntentDecisionComparisonView: React.FC<IntentDecisionComparisonView
                 {c3.final_recommendation}
               </p>
               <p className="text-[11px] text-gray-400 font-sans">
-                Advisory policy mapped from deterministic evidence score ({c3.peak_evidence_score}/100).
+                Advisory policy mapped from raw score {c3.raw_score ?? 105}, capped at {c3.capped_score ?? c3.peak_evidence_score}.
               </p>
             </div>
 

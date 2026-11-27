@@ -136,58 +136,65 @@ Nexus/
 
 ---
 
-## Prerequisites & Installation
+## Prerequisites & Quickstart
 
-### 1. System Requirements
-- **OS**: macOS (Apple Silicon or Intel) or Linux
-- **C++**: Clang or GCC with C++17 support
-- **CMake**: Version $\ge$ 3.16
-- **Python**: Version $\ge$ 3.10 with `virtualenv`
-- **Node.js**: Version $\ge$ 18.0 with `npm`
+### 1. Prerequisites (Tested Versions)
+- **OS**: macOS (Apple Silicon or Intel) or Linux with a C++17 compiler (Clang or GCC)
+- **Python**: `3.12.15` (`>= 3.10` required)
+- **Node.js**: `v25.6.1` (`>= 18.0` required) with `npm`
+- **CMake**: `4.5.1` (`>= 3.16` required)
+- **LibTorch**: Installed via PyTorch Python wheel (`pip install torch` inside `.venv`) and located by CMake via `-DCMAKE_PREFIX_PATH=$(python -c "import torch; print(torch.utils.cmake_prefix_path)")` (or automatic `Python3` discovery in `cpp_engine/CMakeLists.txt`).
 
-### 2. Environment Setup
+### 2. Clean Setup & Build (From a Fresh Clone)
 
 ```bash
-# Clone the repository
+# Clone and enter the repository
 git clone https://github.com/harshitrajj23/Nexus.git
 cd Nexus
 
-# Create and activate Python virtual environment
+# Create and activate Python virtual environment + install dependencies (includes LibTorch)
 python3 -m venv .venv
 source .venv/bin/activate
-
-# Install Python dependencies (PyTorch, FastAPI, Uvicorn, HTTPX)
 pip install torch fastapi uvicorn httpx pydantic
+
+# Build C++17 LibTorch engine & tests
+cmake -B cpp_engine/build -S cpp_engine \
+  -DCMAKE_PREFIX_PATH="$(python -c 'import torch; print(torch.utils.cmake_prefix_path)')"
+cmake --build cpp_engine/build -j4
+
+# Install & build React dashboard assets
+(cd dashboard && npm install && npm run build)
 ```
 
----
+### 3. Run Commands
 
-## 🚀 90-Second Judge Demo Quickstart
+- **Full end-to-end demo & test suite (Preflight → Scenarios A–D → CTest → Adapter/Gateway/API tests):**
+  ```bash
+  ./scripts/run_full_demo.sh
+  ```
+- **API server:**
+  ```bash
+  .venv/bin/uvicorn agent_orchestrator.api:app --host 0.0.0.0 --port 8000
+  ```
+- **Dashboard UI (development server on `http://localhost:5173`):**
+  ```bash
+  cd dashboard && npm run dev
+  ```
 
-Judges can reproduce the entire NEXUS threat detection lifecycle, verify the C++17 LibTorch neural inference, and inspect the hybrid explainable security decisions in under 90 seconds.
+### 4. Expected Output (`./scripts/run_full_demo.sh`)
 
-### Step 1: Start FastAPI Backend Bridge (Terminal 1)
-```bash
-cd /Users/harshitrajsingh/Nexus
-source .venv/bin/activate
-uvicorn agent_orchestrator.api:app --host 0.0.0.0 --port 8000
-```
-- API Documentation available at: `http://localhost:8000/docs`
-- Health check endpoint: `http://localhost:8000/health` (inspects C++ model state and AgntID status)
+- **Context 1 (Approved Intent)**: `40/100` (`Suspicious`, `"Alert analyst"`)
+- **Context 2 (Intent Mismatch)**: `HighRisk` (`65/100`, deterministic; `Critical` `75/100` with `+10` neural baseline)
+- **Context 3 (Multi-Step Exfiltration)**: `Critical` (`95/100` deterministic; `raw 105, capped at 100` with `+10` neural baseline)
+- **AgntID Status (Contexts 1, 2, 3)**: `NOT_EVALUATED` (`Advisory only — no live blocking gateway attached`)
 
-### Step 2: Start React Security Intelligence Dashboard (Terminal 2)
-```bash
-cd /Users/harshitrajsingh/Nexus/dashboard
-npm run dev
-```
-- Open `http://localhost:5173` (or `http://localhost:3000`) in your browser.
+### 5. What Is Not Verified
 
-### Step 3: Run the Automated Competition Experiments (Terminal 3)
-```bash
-cd /Users/harshitrajsingh/Nexus
-source .venv/bin/activate
-python agent_orchestrator/run_competition_demos.py
-```
+- **AgntID is `NOT_EVALUATED`. No enforcement occurs.** No official AgntID SDK, CLI, or endpoint is installed or called; all policy decisions are advisory NEXUS decisions.
+- **The neural layer is near-uniform; the `+10` baseline fires on every run.** `model_anomaly_score` triggers whenever neural argmax is non-`Normal` (`Suspicious`/`HighRisk`/`Critical`), and all four scenarios (including benign) land on `Suspicious` by a measured margin of `0.0056` to `0.0450` over `Normal`.
+- **Replay timestamps are pinned (`base_timestamp=1795330500`).**
+- **Scores were unchanged at `+0h` and `+12h` offsets in this test only.**
+- **All data is mock; no real agent or network is involved.** External egress uses `mock://` targets only.
 
 ### What Judges Will See in the Dashboard
 
@@ -342,7 +349,7 @@ In accordance with strict competition evaluation and scientific integrity princi
    - **NEXUS policy is advisory when AgntID is unavailable.**
    - **All current decisions in local demos are NEXUS decisions, not AgntID decisions.**
    - **Mock external egress is simulated locally and performs no real network transfer.**
-   - **Reproducibility & Model Note**: Replay timestamps are pinned for reproducibility (`base_timestamp=1795330500`, labeled `replay timestamp (pinned)`); scores were unchanged at +0h and +12h offsets in this test; the neural layer is near-uniform in this build, and the +10 model term is applied to all runs (including the benign run), so it does not discriminate and the deterministic evidence score drives policy decisions.
+   - **Reproducibility & Model Note**: Replay timestamps are pinned for reproducibility (`base_timestamp=1795330500`, labeled `replay timestamp (pinned)`); scores were unchanged at +0h and +12h offsets in this test; the neural layer is near-uniform in this build, and the +10 model term triggers when neural argmax is non-`Normal` (`Suspicious`/`HighRisk`/`Critical`). Because every run in this build (including benign) has argmax=`Suspicious` by a measured margin of `0.0056` to `0.0450` over `Normal` across all four scenarios, +10 fires on every run and does not discriminate, so the deterministic evidence score drives policy decisions. Context 2 (Intent Mismatch) is `HighRisk` (65/100, deterministic), reaching `Critical` (75/100) only with +10 neural baseline, whereas Context 1 (`Suspicious`, 30/100 deterministic / 40/100 with +10), Context 3 (`Critical`, 95/100 deterministic / raw 105, capped at 100 with +10), and `adversarial_exfil` (`Critical`, 95/100 deterministic / raw 105, capped at 100 with +10) keep the same policy tier.
    - System checks confirm that no official AgntID SDK or daemon is currently installed in the host environment. Decisions are recorded independently as `NOT_EVALUATED` (`enforced: false`). **No fake enforcement claims or fabricated blocks are reported.**
 
 ---

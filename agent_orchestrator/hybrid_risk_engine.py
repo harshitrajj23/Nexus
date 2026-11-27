@@ -185,14 +185,15 @@ class HybridRiskEngine:
         # Deterministic score before neural baseline term
         deterministic_score = max(0, total_score)
 
-        # Signal 5: Neural Baseline Term (+10; applied to all runs in this build, non-discriminating)
+        # Signal 5: Neural Baseline Term (+10 when neural argmax is non-Normal)
         pred_dict = model_prediction or {}
         pred_class = pred_dict.get("class_name", "Normal")
         pred_conf = float(pred_dict.get("confidence", 0.0))
         model_anomaly_score = 0
         neural_term_note = (
-            "The +10 model term is applied to all runs in this build, including the benign run, "
-            "so it does not discriminate."
+            "The +10 model term triggers when neural argmax is Suspicious/HighRisk/Critical (non-Normal); "
+            "in this build all runs (including benign) have argmax=Suspicious by a measured margin of "
+            "0.0056 to 0.0450 over Normal across all four scenarios, so +10 fires on every run and does not discriminate."
         )
 
         if pred_class in ["Suspicious", "HighRisk", "Critical"]:

@@ -286,7 +286,7 @@ All three benchmark scenarios were executed live through the native **C++17 LibT
 ## 2. Four-Layer Decision Framework (Model != Evidence != Enforcement)
 
 1. **Neural Model Signal**: Raw 4-class softmax probability distribution emitted by LibTorch C++ forward pass (`Normal`, `Suspicious`, `HighRisk`, `Critical`). Neural probabilities are near-uniform (37–42%), so the deterministic evidence score drives policy decisions.
-2. **Deterministic Evidence Score**: Transparent, observable scoring over the ordered event chain (+25 secret access, +25 admin escalation, +35 external egress, +10 full causal chain, plus +10 neural baseline term). Note: the +10 model term is applied to all runs in this build, including the benign run, so it does not discriminate. Raw sum (up to 105) is capped at 100.
+2. **Deterministic Evidence Score**: Transparent, observable scoring over the ordered event chain (+25 secret access, +25 admin escalation, +35 external egress, +10 full causal chain, plus +10 neural term when argmax is Suspicious/HighRisk/Critical). Note: in this build all runs (including benign) have argmax=Suspicious by a measured margin of 0.0056 to 0.0450 over Normal across all four scenarios, so +10 fires on every run and does not discriminate. Raw sum (up to 105) is capped at 100.
 3. **Policy Recommendation**: Mapped actionable response (`Normal` -> Continue monitoring, `Suspicious` -> Alert analyst, `HighRisk` -> Require human approval, `Critical` -> Recommend workflow pause and investigation).
 4. **Enforcement Status**: Strictly disclosed as **`Advisory only — no live blocking gateway attached`**. NEXUS advises human operators and upstream gateways; it does not fabricate autonomous inline blocking.
 
@@ -316,8 +316,21 @@ Identical sensitive resource (`credentials/config.env`) tested across distinct o
 | Scenario | Intent | Action | NEXUS Policy | AgntID Decision | Enforcement | Finding |
 |---|---|---|:---:|:---:|:---:|---|
 | **{res_intent['comparison_matrix'][0]['scenario']}** | {res_intent['comparison_matrix'][0]['intent']} | `{res_intent['comparison_matrix'][0]['action']}` | **{res_intent['comparison_matrix'][0]['nexus_policy']}** ({res_intent['comparison_matrix'][0]['nexus_score']}/100) | `{res_intent['comparison_matrix'][0]['agntid_decision']}` | {res_intent['comparison_matrix'][0]['enforcement']} | {res_intent['comparison_matrix'][0]['finding']} |
-| **{res_intent['comparison_matrix'][1]['scenario']}** | {res_intent['comparison_matrix'][1]['intent']} | `{res_intent['comparison_matrix'][1]['action']}` | **{res_intent['comparison_matrix'][1]['nexus_policy']}** ({res_intent['comparison_matrix'][1]['nexus_score']}/100) | `{res_intent['comparison_matrix'][1]['agntid_decision']}` | {res_intent['comparison_matrix'][1]['enforcement']} | {res_intent['comparison_matrix'][1]['finding']} |
-| **{res_intent['comparison_matrix'][2]['scenario']}** | {res_intent['comparison_matrix'][2]['intent']} | `{res_intent['comparison_matrix'][2]['action']}` | **{res_intent['comparison_matrix'][2]['nexus_policy']}** ({res_intent['comparison_matrix'][2]['nexus_score']}/100) | `{res_intent['comparison_matrix'][2]['agntid_decision']}` | {res_intent['comparison_matrix'][2]['enforcement']} | {res_intent['comparison_matrix'][2]['finding']} |
+| **{res_intent['comparison_matrix'][1]['scenario']}** | {res_intent['comparison_matrix'][1]['intent']} | `{res_intent['comparison_matrix'][1]['action']}` | **HighRisk** ({res_intent['conditions']['intent_mismatch']['deterministic_score']}/100, deterministic; `{res_intent['comparison_matrix'][1]['nexus_policy']}` {res_intent['comparison_matrix'][1]['nexus_score']}/100 with +10 neural baseline) | `{res_intent['comparison_matrix'][1]['agntid_decision']}` | {res_intent['comparison_matrix'][1]['enforcement']} | {res_intent['comparison_matrix'][1]['finding']} |
+| **{res_intent['comparison_matrix'][2]['scenario']}** | {res_intent['comparison_matrix'][2]['intent']} | `{res_intent['comparison_matrix'][2]['action']}` | **{res_intent['comparison_matrix'][2]['nexus_policy']}** (raw {res_intent['conditions']['multi_step_exfiltration']['raw_score']}, capped at {res_intent['comparison_matrix'][2]['nexus_score']}) | `{res_intent['comparison_matrix'][2]['agntid_decision']}` | {res_intent['comparison_matrix'][2]['enforcement']} | {res_intent['comparison_matrix'][2]['finding']} |
+
+---
+
+## Policy outcome without neural baseline
+
+Policy thresholds in `hybrid_risk_engine.py`: `Normal` (`< 25`), `Suspicious` (`25–49`), `HighRisk` (`50–74`), `Critical` (`>= 75`), evaluated on `final_score = min(100, deterministic_score + model_anomaly_score)`.
+
+| Scenario | Deterministic-Only Score | Policy Without +10 Baseline | Score With +10 Baseline | Policy With +10 Baseline | Label Changed? |
+|---|:---:|---|:---:|---|:---:|
+| **Context 1 (Approved Intent)** | {res_intent['conditions']['approved_rotation']['deterministic_score']}/100 | Suspicious (`Alert analyst`) | {res_intent['conditions']['approved_rotation']['capped_score']}/100 | {res_intent['conditions']['approved_rotation']['final_policy_risk']} (`{res_intent['conditions']['approved_rotation']['final_recommendation']}`) | No |
+| **Context 2 (Intent Mismatch)** | {res_intent['conditions']['intent_mismatch']['deterministic_score']}/100 | HighRisk (`Require human approval before next sensitive action`) | {res_intent['conditions']['intent_mismatch']['capped_score']}/100 | {res_intent['conditions']['intent_mismatch']['final_policy_risk']} (`{res_intent['conditions']['intent_mismatch']['final_recommendation']}`) | **Yes (Critical → HighRisk)** |
+| **Context 3 (Multi-Step Exfiltration)** | {res_intent['conditions']['multi_step_exfiltration']['deterministic_score']}/100 | Critical (`Recommend workflow pause and investigation`) | raw {res_intent['conditions']['multi_step_exfiltration']['raw_score']}, capped at {res_intent['conditions']['multi_step_exfiltration']['capped_score']} | {res_intent['conditions']['multi_step_exfiltration']['final_policy_risk']} (`{res_intent['conditions']['multi_step_exfiltration']['final_recommendation']}`) | No |
+| **Experiment B (`adversarial_exfil`)** | {res_b['deterministic_score']}/100 | Critical (`Recommend workflow pause and investigation`) | raw {res_b['raw_score']}, capped at {res_b['capped_score']} | {res_b['peak_policy_risk']} (`{res_b['recommended_action']}`) | No |
 
 ---
 
