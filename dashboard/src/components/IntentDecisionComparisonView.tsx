@@ -237,7 +237,9 @@ export const IntentDecisionComparisonView: React.FC<IntentDecisionComparisonView
                 <React.Fragment key={step.event_id || i}>
                   <div className="px-2.5 py-1.5 rounded bg-gray-950 border border-gray-700">
                     <span className="text-rose-300 font-bold">{step.action}</span>
-                    <span className="text-gray-500 text-[10px] block">{formatEpoch(step.timestamp)}</span>
+                    <span className="text-gray-500 text-[10px] block">
+                      {step.timestamp_label || 'replay timestamp (pinned)'}: {formatEpoch(step.timestamp)}
+                    </span>
                   </div>
                   {i < c3Steps.length - 1 && <ArrowRight className="w-4 h-4 text-gray-500 shrink-0" />}
                 </React.Fragment>
@@ -287,7 +289,7 @@ export const IntentDecisionComparisonView: React.FC<IntentDecisionComparisonView
                 })}
               </div>
               <p className="text-[11px] text-gray-400 font-sans">
-                Model output is near-uniform in this build; the evidence score drives policy decisions.
+                Model output is near-uniform in this build; the evidence score drives policy decisions. The +10 model term is applied to all runs in this build, including the benign run, so it does not discriminate.
               </p>
             </div>
 
@@ -297,7 +299,16 @@ export const IntentDecisionComparisonView: React.FC<IntentDecisionComparisonView
                 <span className="text-amber-400 font-bold uppercase text-[11px]">
                   2. Evidence Score Breakdown
                 </span>
-                <span className="text-white font-bold">{c3.peak_evidence_score} / 100</span>
+                <span className="text-white font-bold">
+                  raw {c3.raw_score ?? 105}, capped at {c3.capped_score ?? c3.peak_evidence_score}
+                </span>
+              </div>
+              <div className="text-[11px] text-amber-200 bg-amber-950/30 border border-amber-500/30 rounded px-2.5 py-1.5 font-semibold">
+                {c3.score_headline || `Deterministic ${c3.deterministic_score ?? 95} + neural baseline ${c3.model_anomaly_score ?? 10} = raw ${c3.raw_score ?? 105}, capped at 100.`}
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-gray-400 px-1">
+                <span>Deterministic: <strong className="text-gray-200">{c3.deterministic_score ?? 95}</strong> (+25 +25 +35 +10)</span>
+                <span>Neural Baseline: <strong className="text-cyan-300">+{c3.model_anomaly_score ?? 10}</strong> (all runs)</span>
               </div>
               <div className="space-y-1">
                 {(c3.final_evidence_signals || c3Final.evidence_signals || []).map((sig: any) => (

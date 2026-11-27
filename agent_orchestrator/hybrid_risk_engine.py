@@ -182,22 +182,36 @@ class HybridRiskEngine:
             })
             total_score += 5
 
-        # Signal 5: Temporal Neural Model Anomaly (+10)
+        # Deterministic score before neural baseline term
+        deterministic_score = max(0, total_score)
+
+        # Signal 5: Neural Baseline Term (+10; applied to all runs in this build, non-discriminating)
         pred_dict = model_prediction or {}
         pred_class = pred_dict.get("class_name", "Normal")
         pred_conf = float(pred_dict.get("confidence", 0.0))
+        model_anomaly_score = 0
+        neural_term_note = (
+            "The +10 model term is applied to all runs in this build, including the benign run, "
+            "so it does not discriminate."
+        )
 
         if pred_class in ["Suspicious", "HighRisk", "Critical"]:
             signals.append({
-                "id": "NEURAL_TEMPORAL_ANOMALY",
-                "name": "Neural Sequence Anomaly",
+                "id": "NEURAL_BASELINE_TERM",
+                "name": "Neural Baseline Term (+10, non-discriminating)",
                 "points": 10,
-                "reason": f"Temporal R-GCN + GRU model flagged sequence as {pred_class} (confidence: {pred_conf:.1%})"
+                "reason": neural_term_note
             })
+            model_anomaly_score = 10
             total_score += 10
 
-        # Clamp final evidence score to [0, 100]
-        final_score = max(0, min(100, total_score))
+        raw_score = total_score
+        capped_score = max(0, min(100, raw_score))
+        score_headline = (
+            f"Deterministic {deterministic_score} + neural baseline {model_anomaly_score} "
+            f"= raw {raw_score}, capped at 100."
+        )
+        final_score = capped_score
 
         # Map Evidence Score to Policy Risk & Recommended Action
         if final_score >= 75:
@@ -240,6 +254,12 @@ class HybridRiskEngine:
         return {
             "model_prediction": pred_class,
             "model_confidence": pred_conf,
+            "deterministic_score": deterministic_score,
+            "model_anomaly_score": model_anomaly_score,
+            "raw_score": raw_score,
+            "capped_score": capped_score,
+            "score_headline": score_headline,
+            "neural_term_note": neural_term_note,
             "evidence_score": final_score,
             "evidence_signals": signals,
             "policy_risk": policy_risk,

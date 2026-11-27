@@ -250,6 +250,11 @@ export const ExperimentLabView: React.FC<ExperimentLabViewProps> = ({
               <div className="mt-1 font-bold text-white text-sm">
                 {result.summary.recommended_action}
               </div>
+              {(result.summary as any).score_headline && (
+                <div className="mt-1.5 text-[11px] text-amber-300 font-semibold">
+                  {(result.summary as any).score_headline} ({(result.summary as any).timestamp_label || 'replay timestamp (pinned)'})
+                </div>
+              )}
               {result.summary.attack_explanation?.narrative && (
                 <p className="mt-1.5 text-xs text-gray-300 font-sans leading-relaxed">
                   {result.summary.attack_explanation.narrative}
@@ -277,9 +282,14 @@ export const ExperimentLabView: React.FC<ExperimentLabViewProps> = ({
                       <span className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 font-bold text-[11px]">
                         {idx + 1}
                       </span>
-                      <span className="font-bold text-gray-200">
-                        [{e.tool}] {e.action} &rarr; <span className="text-amber-300">{e.resource}</span>
-                      </span>
+                      <div>
+                        <span className="font-bold text-gray-200 block">
+                          [{e.tool}] {e.action} &rarr; <span className="text-amber-300">{e.resource}</span>
+                        </span>
+                        <span className="text-[10px] text-gray-500 block">
+                          {(step as any).timestamp_label || 'replay timestamp (pinned)'}: {e.timestamp}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       {hybrid && (

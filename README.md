@@ -342,6 +342,7 @@ In accordance with strict competition evaluation and scientific integrity princi
    - **NEXUS policy is advisory when AgntID is unavailable.**
    - **All current decisions in local demos are NEXUS decisions, not AgntID decisions.**
    - **Mock external egress is simulated locally and performs no real network transfer.**
+   - **Reproducibility & Model Note**: Replay timestamps are pinned for reproducibility (`base_timestamp=1795330500`, labeled `replay timestamp (pinned)`); scores were unchanged at +0h and +12h offsets in this test; the neural layer is near-uniform in this build, and the +10 model term is applied to all runs (including the benign run), so it does not discriminate and the deterministic evidence score drives policy decisions.
    - System checks confirm that no official AgntID SDK or daemon is currently installed in the host environment. Decisions are recorded independently as `NOT_EVALUATED` (`enforced: false`). **No fake enforcement claims or fabricated blocks are reported.**
 
 ---

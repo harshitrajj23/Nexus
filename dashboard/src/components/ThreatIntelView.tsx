@@ -180,7 +180,7 @@ export const ThreatIntelView: React.FC<ThreatIntelViewProps> = ({
                 </span>
               </div>
               <p className="text-xs text-gray-400 mt-0.5">
-                Timestamp: <span className="font-mono text-gray-300">{event.timestamp}</span> &bull; Agent: <span className="font-mono text-blue-400">{event.agent_id}</span>
+                Replay Timestamp (Pinned): <span className="font-mono text-gray-300">{event.timestamp}</span> &bull; Agent: <span className="font-mono text-blue-400">{event.agent_id}</span>
               </p>
             </div>
           </div>

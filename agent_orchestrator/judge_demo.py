@@ -143,6 +143,12 @@ def run_scenario_stepwise(
         "steps": recorded_steps,
         "final_model_class": final_pred["class_name"],
         "final_model_confidence": float(final_pred["confidence"]),
+        "deterministic_score": final_hybrid["deterministic_score"],
+        "model_anomaly_score": final_hybrid["model_anomaly_score"],
+        "raw_score": final_hybrid["raw_score"],
+        "capped_score": final_hybrid["capped_score"],
+        "score_headline": final_hybrid["score_headline"],
+        "neural_term_note": final_hybrid["neural_term_note"],
         "peak_evidence_score": max(s["hybrid_assessment"]["evidence_score"] for s in recorded_steps),
         "peak_policy_risk": final_hybrid["policy_risk"],
         "recommended_action": final_hybrid["recommended_action"],
@@ -202,9 +208,11 @@ def main():
         steps_b = agent_adv.run_scenario("adversarial_exfil", base_timestamp=1795330500)
         res_b = run_scenario_stepwise("adversarial_exfil", steps_b, cpp_engine, hybrid_engine)
 
-        print(f"\n  >> Experiment B Outcome: Score {res_b['peak_evidence_score']}/100 ({res_b['peak_policy_risk']})")
+        print(f"\n  >> Experiment B Outcome: {res_b['score_headline']} (Capped {res_b['capped_score']}/100, {res_b['peak_policy_risk']})")
+        print(f"     Score Breakdown: Deterministic={res_b['deterministic_score']} (+25/+25/+35/+10), Neural Baseline=+{res_b['model_anomaly_score']} => raw {res_b['raw_score']}, capped at 100")
+        print(f"     Neural Note: {res_b['neural_term_note']}")
         print(f"     Policy Recommendation: {res_b['recommended_action']}")
-        print(f"     Sensitive+Egress Inline Trails: {res_b['sensitive_egress_trails_count']} (from {res_b['raw_dfs_trails_count']} raw DFS trails)")
+        print(f"     Ordered Event Chain (Evidence Scoring): {res_b['sensitive_egress_trails_count']} inline (from {res_b['raw_dfs_trails_count']} raw DFS trails)")
         print("     Enforcement Status: Advisory only — no live blocking gateway attached")
         narrative_b = res_b["attack_explanation"].get("narrative", "")
         if narrative_b:
@@ -243,8 +251,11 @@ def main():
     print("\n[Phase 4/4] Generating Judge Evidence Bundle...")
 
     exp_b_chrono_lines = "\n".join(
-        f"- **Step {s['step_index']} ({s['event']['action']})**: `{s['event']['resource']}` -> "
-        f"Score: {s['hybrid_assessment']['evidence_score']}/100 -> Policy: {s['hybrid_assessment']['policy_risk']}"
+        f"- **Step {s['step_index']} ({s['event']['action']})**: `{s['event']['resource']}` | "
+        f"replay timestamp (pinned): `{s['event']['timestamp']}` -> "
+        f"Score: {s['hybrid_assessment']['capped_score']}/100 "
+        f"(det={s['hybrid_assessment']['deterministic_score']}, neural_baseline=+{s['hybrid_assessment']['model_anomaly_score']}, raw={s['hybrid_assessment']['raw_score']}) -> "
+        f"Policy: {s['hybrid_assessment']['policy_risk']}"
         for s in res_b["steps"]
     )
 
@@ -275,7 +286,7 @@ All three benchmark scenarios were executed live through the native **C++17 LibT
 ## 2. Four-Layer Decision Framework (Model != Evidence != Enforcement)
 
 1. **Neural Model Signal**: Raw 4-class softmax probability distribution emitted by LibTorch C++ forward pass (`Normal`, `Suspicious`, `HighRisk`, `Critical`). Neural probabilities are near-uniform (37–42%), so the deterministic evidence score drives policy decisions.
-2. **Deterministic Evidence Score**: Transparent, observable scoring over the ordered event chain (+25 secret access, +25 admin escalation, +35 external egress, +10 full causal chain, +10 neural anomaly confirmation).
+2. **Deterministic Evidence Score**: Transparent, observable scoring over the ordered event chain (+25 secret access, +25 admin escalation, +35 external egress, +10 full causal chain, plus +10 neural baseline term). Note: the +10 model term is applied to all runs in this build, including the benign run, so it does not discriminate. Raw sum (up to 105) is capped at 100.
 3. **Policy Recommendation**: Mapped actionable response (`Normal` -> Continue monitoring, `Suspicious` -> Alert analyst, `HighRisk` -> Require human approval, `Critical` -> Recommend workflow pause and investigation).
 4. **Enforcement Status**: Strictly disclosed as **`Advisory only — no live blocking gateway attached`**. NEXUS advises human operators and upstream gateways; it does not fabricate autonomous inline blocking.
 
@@ -286,7 +297,10 @@ All three benchmark scenarios were executed live through the native **C++17 LibT
 - **Compromised Agent**: `{res_b['attack_explanation'].get('affected_agent', 'agent_adversary_exfil_02')}`
 - **Sensitive Target Resource**: `{res_b['attack_explanation'].get('sensitive_resource', 'credentials/config.env')}`
 - **Elevated Privilege**: `{res_b['attack_explanation'].get('privilege_or_role', 'ADMIN')}`
-- **Unauthorized Destination**: `{res_b['attack_explanation'].get('external_destination', 'mock://adversary-exfil.org/api/v1/dump')}`
+- **Authorized/Simulated Egress Target**: `{res_b['attack_explanation'].get('external_destination', 'mock://adversary-exfil.org/api/v1/dump')}`
+- **Score Breakdown Headline**: **{res_b['score_headline']}** (`deterministic={res_b['deterministic_score']}`, `neural_baseline=+{res_b['model_anomaly_score']}`, `raw={res_b['raw_score']}`, `capped={res_b['capped_score']}`)
+- **Neural Term Disclosure**: {res_b['neural_term_note']}
+- **Timestamp Mode**: `replay timestamp (pinned)` (`base_timestamp=1795330500`)
 - **Attack Narrative**:
   > {res_b['attack_explanation'].get('narrative', 'N/A')}
 

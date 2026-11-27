@@ -133,9 +133,15 @@ def test_experiment_adversarial():
     assert len(data["steps"]) == 4
 
     summary = data["summary"]
-    # Adversarial exfil accesses config.env (+25), admin (+25), exfil (+35), full chain (+10), neural (+10) => Score == 100
+    # Adversarial exfil: Deterministic 95 + neural baseline 10 = raw 105, capped at 100
     assert summary["policy_risk_detected"] == "Critical", f"Expected Critical, got {summary['policy_risk_detected']}"
+    assert summary["deterministic_score"] == 95, f"Expected deterministic_score == 95, got {summary.get('deterministic_score')}"
+    assert summary["model_anomaly_score"] == 10, f"Expected model_anomaly_score == 10, got {summary.get('model_anomaly_score')}"
+    assert summary["raw_score"] == 105, f"Expected raw_score == 105, got {summary.get('raw_score')}"
+    assert summary["capped_score"] == 100, f"Expected capped_score == 100, got {summary.get('capped_score')}"
+    assert summary["score_headline"] == "Deterministic 95 + neural baseline 10 = raw 105, capped at 100.", f"Unexpected headline: {summary.get('score_headline')}"
     assert summary["peak_evidence_score"] == 100, f"Expected peak_evidence_score == 100 for exfil, got {summary['peak_evidence_score']}"
+    assert summary["timestamp_label"] == "replay timestamp (pinned)", f"Expected replay timestamp label, got {summary.get('timestamp_label')}"
     assert "attack_explanation" in summary and summary["attack_explanation"] is not None
     assert summary["attack_explanation"]["sensitive_resource"] == "credentials/config.env"
     assert summary["attack_explanation"]["privilege_or_role"] == "ADMIN"
@@ -249,7 +255,19 @@ def test_intent_boundary_experiment():
     if c2["final_agntid_decision"] != "NOT_EVALUATED":
         mismatches.append(f"Context 2 AgntID expected 'NOT_EVALUATED', got '{c2['final_agntid_decision']}'")
 
-    # Context 3 assertions: score 100 with chain and egress present
+    # Context 3 assertions: Deterministic 95 + neural baseline 10 = raw 105, capped at 100
+    if c3.get("deterministic_score") != 95:
+        mismatches.append(f"Context 3 deterministic_score expected 95, got {c3.get('deterministic_score')}")
+    if c3.get("model_anomaly_score") != 10:
+        mismatches.append(f"Context 3 model_anomaly_score expected 10, got {c3.get('model_anomaly_score')}")
+    if c3.get("raw_score") != 105:
+        mismatches.append(f"Context 3 raw_score expected 105, got {c3.get('raw_score')}")
+    if c3.get("capped_score") != 100:
+        mismatches.append(f"Context 3 capped_score expected 100, got {c3.get('capped_score')}")
+    if c3.get("score_headline") != "Deterministic 95 + neural baseline 10 = raw 105, capped at 100.":
+        mismatches.append(f"Context 3 score_headline mismatch: {c3.get('score_headline')}")
+    if c3.get("timestamp_label") != "replay timestamp (pinned)":
+        mismatches.append(f"Context 3 timestamp_label expected 'replay timestamp (pinned)', got {c3.get('timestamp_label')}")
     if c3["peak_evidence_score"] != 100:
         mismatches.append(f"Context 3 score expected 100, got {c3['peak_evidence_score']}")
     actions_c3 = [s["action"] for s in c3["steps"]]

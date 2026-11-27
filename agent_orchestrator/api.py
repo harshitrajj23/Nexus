@@ -335,6 +335,7 @@ def run_experiment(req: ExperimentRunRequest) -> Dict[str, Any]:
 
         processed_events.append({
             "event": evt,
+            "timestamp_label": "replay timestamp (pinned)" if req.base_timestamp is not None else "live timestamp",
             "tool_result": step_record["tool_result"],
             "nexus_prediction": pred,
             "latency_ms": cpp_res.get("latency_ms", 0.0),
@@ -342,6 +343,12 @@ def run_experiment(req: ExperimentRunRequest) -> Dict[str, Any]:
             "agntid_decision": agnt_dec,
             # Hybrid risk additions per step
             "hybrid_assessment": hybrid_step,
+            "deterministic_score": hybrid_step["deterministic_score"],
+            "model_anomaly_score": hybrid_step["model_anomaly_score"],
+            "raw_score": hybrid_step["raw_score"],
+            "capped_score": hybrid_step["capped_score"],
+            "score_headline": hybrid_step["score_headline"],
+            "neural_term_note": hybrid_step["neural_term_note"],
             "evidence_score": hybrid_step["evidence_score"],
             "evidence_signals": hybrid_step["evidence_signals"],
             "policy_risk": hybrid_step["policy_risk"],
@@ -368,7 +375,14 @@ def run_experiment(req: ExperimentRunRequest) -> Dict[str, Any]:
             "agntid_available": inspect_agntid_environment()["enforcement_active"],
             # Upgraded Hybrid Hackathon Judging Contract
             "policy_risk_detected": highest_policy_risk,
+            "deterministic_score": final_hybrid["deterministic_score"] if final_hybrid else 0,
+            "model_anomaly_score": final_hybrid["model_anomaly_score"] if final_hybrid else 0,
+            "raw_score": final_hybrid["raw_score"] if final_hybrid else 0,
+            "capped_score": final_hybrid["capped_score"] if final_hybrid else 0,
+            "score_headline": final_hybrid["score_headline"] if final_hybrid else "Deterministic 0 + neural baseline 0 = raw 0, capped at 100.",
+            "neural_term_note": final_hybrid["neural_term_note"] if final_hybrid else "",
             "peak_evidence_score": peak_evidence_score,
+            "timestamp_label": "replay timestamp (pinned)" if req.base_timestamp is not None else "live timestamp",
             "recommended_action": final_hybrid["recommended_action"] if final_hybrid else "Continue monitoring",
             "actual_enforcement_status": final_hybrid["actual_enforcement_status"] if final_hybrid else "NOT_ENFORCED (No active blocking engine attached; policy is advisory)",
             "attack_explanation": final_hybrid.get("attack_explanation") if final_hybrid else None,
