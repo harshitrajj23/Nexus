@@ -41,15 +41,20 @@ export interface RiskPrediction {
 }
 
 export interface PathStep {
-  edge_id: number;
-  source_id: number;
-  destination_id: number;
-  source_key: string;
-  destination_key: string;
-  relation_name: string;
+  edge_id?: number;
+  edge_score?: number;
+  node_id?: number;
+  node_key?: string;
+  node_type?: string;
+  relation?: string;
+  source_id?: number;
+  destination_id?: number;
+  source_key?: string;
+  destination_key?: string;
+  relation_name?: string;
   timestamp: number;
-  attribution_score: number;
-  structural_multiplier: number;
+  attribution_score?: number;
+  structural_multiplier?: number;
 }
 
 export interface AttackPath {

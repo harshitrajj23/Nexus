@@ -314,13 +314,13 @@ export const ThreatIntelView: React.FC<ThreatIntelViewProps> = ({
                     <div className="flex items-center justify-between">
                       <span className="font-mono font-bold text-xs text-white">Path #{idx + 1}</span>
                       <span className="font-mono text-xs px-2 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30">
-                        Score: {p.total_score.toFixed(3)}
+                        Score: {(p.total_score ?? 0).toFixed(3)}
                       </span>
                     </div>
                     <p className="text-[11px] text-gray-300 mt-1.5 font-mono truncate">{p.summary}</p>
                     <div className="mt-2 text-[10px] text-gray-500 font-mono flex items-center justify-between">
-                      <span>{p.steps.length} causal hops</span>
-                      <span>Conf: {(p.confidence * 100).toFixed(1)}%</span>
+                      <span>{p.steps?.length ?? 0} causal hops</span>
+                      <span>Conf: {((p.confidence ?? 0) * 100).toFixed(1)}%</span>
                     </div>
                   </div>
                 );
@@ -357,21 +357,31 @@ export const ThreatIntelView: React.FC<ThreatIntelViewProps> = ({
                           <th className="py-2 px-2.5">Source Entity</th>
                           <th className="py-2 px-2.5">Relation</th>
                           <th className="py-2 px-2.5">Target Entity</th>
-                          <th className="py-2 px-2.5">Attribution (a_e)</th>
-                          <th className="py-2 px-2.5">Multiplier</th>
+                          <th className="py-2 px-2.5">Attribution / Edge Score</th>
+                          <th className="py-2 px-2.5">Type / Mult</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-800">
-                        {selectedPath.steps.map((step, idx) => (
-                          <tr key={idx} className="hover:bg-gray-800/40">
-                            <td className="py-2 px-2.5 text-gray-500">#{idx + 1}</td>
-                            <td className="py-2 px-2.5 text-blue-400 font-semibold">{step.source_key}</td>
-                            <td className="py-2 px-2.5 text-purple-400">{step.relation_name}</td>
-                            <td className="py-2 px-2.5 text-amber-300 font-semibold">{step.destination_key}</td>
-                            <td className="py-2 px-2.5 text-gray-300">{step.attribution_score.toFixed(4)}</td>
-                            <td className="py-2 px-2.5 text-rose-400 font-bold">{step.structural_multiplier}x</td>
-                          </tr>
-                        ))}
+                        {(selectedPath.steps || []).map((step, idx) => {
+                          const prevStep = idx > 0 ? selectedPath.steps[idx - 1] : null;
+                          const sourceLabel = step.source_key || (prevStep?.node_key ?? step.node_key ?? '—');
+                          const relationLabel = step.relation_name || step.relation || '—';
+                          const targetLabel = step.destination_key || step.node_key || '—';
+                          const scoreVal = step.attribution_score ?? step.edge_score ?? 0;
+                          const multOrType = step.structural_multiplier !== undefined
+                            ? `${step.structural_multiplier}x`
+                            : (step.node_type || '—');
+                          return (
+                            <tr key={idx} className="hover:bg-gray-800/40">
+                              <td className="py-2 px-2.5 text-gray-500">#{idx + 1}</td>
+                              <td className="py-2 px-2.5 text-blue-400 font-semibold">{sourceLabel}</td>
+                              <td className="py-2 px-2.5 text-purple-400">{relationLabel}</td>
+                              <td className="py-2 px-2.5 text-amber-300 font-semibold">{targetLabel}</td>
+                              <td className="py-2 px-2.5 text-gray-300">{scoreVal.toFixed(4)}</td>
+                              <td className="py-2 px-2.5 text-rose-400 font-bold">{multOrType}</td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

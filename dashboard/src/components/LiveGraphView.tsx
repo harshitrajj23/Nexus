@@ -153,8 +153,9 @@ export const LiveGraphView: React.FC<LiveGraphViewProps> = ({
     const set = new Set<number>();
     if (activeAttackPath?.steps) {
       activeAttackPath.steps.forEach((step) => {
-        set.add(step.source_id);
-        set.add(step.destination_id);
+        if (step.source_id !== undefined) set.add(step.source_id);
+        if (step.destination_id !== undefined) set.add(step.destination_id);
+        if (step.node_id !== undefined) set.add(step.node_id);
       });
     }
     return set;
